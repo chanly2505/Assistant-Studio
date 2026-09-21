@@ -376,7 +376,10 @@ model YouTubeVideo {
   tags                 String[]
   categoryId           String?
   defaultLanguage      String?
-  isShort              Boolean             @default(false)
+  /// Heuristic, NOT a YouTube fact: duration > 0 and <= 180 s (the Shorts length
+  /// limit). The Data API exposes no "is a Short" field, so a 2-minute regular
+  /// upload is also true here. The UI labels this "3 min or less", never "Short".
+  isShortForm          Boolean             @default(false)
   syncTier             SyncTier            @default(HOT)
   lastStatsSyncAt      DateTime?
   firstSeenAt          DateTime            @default(now())
@@ -655,6 +658,8 @@ model SyncJob {
   quotaUnitsUsed Int           @default(0)
   errorCode      String?
   errorMessage   String?       @db.Text
+  /// What caused this run: connect | manual | schedule.
+  trigger        String        @default("schedule")
   attempt        Int           @default(1)
   createdAt      DateTime      @default(now())
 

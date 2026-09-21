@@ -49,6 +49,13 @@ const base = z.object({
   AI_DAILY_SPEND_LIMIT_MICROS: z.coerce.number().int().positive().default(50_000_000),
 
   REDIS_URL: z.string().url().optional(),
+  /** Prefix for every Redis key and queue, so environments sharing a server never collide. */
+  REDIS_KEY_PREFIX: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .default('ysa'),
+  /** Jobs the background worker runs at once. Each holds one YouTube request at a time. */
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(32).default(4),
   SENTRY_DSN: z.string().url().optional(),
 
   /** Set by Next.js itself: `phase-production-build` while `next build` runs. */

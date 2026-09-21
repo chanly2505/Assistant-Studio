@@ -39,11 +39,9 @@ describe('YouTube service (not yet implemented parts)', () => {
   const youtube = getYouTubeService();
   const token = new SecretString('ya29.test', 'accessToken');
 
-  // listOwnedChannels is real since Phase 3 and tested against intercepted
-  // Google responses in tests/integration/youtube/.
+  // Channels (Phase 3) and videos (Phase 4) are real and tested against
+  // intercepted Google responses in tests/integration/.
   it.each([
-    ['listChannelVideos', () => youtube.listChannelVideos(token, 'UU1')],
-    ['getVideoStats', () => youtube.getVideoStats(token, ['v1'])],
     [
       'getChannelAnalytics',
       () => youtube.getChannelAnalytics(token, 'UC1', new Date(), new Date()),

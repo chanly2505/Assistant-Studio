@@ -4,14 +4,17 @@ Helps creators plan, write and understand a YouTube channel.
 Architecture and constraints: [`docs/architecture/`](docs/architecture/README.md). Read
 [§12 Constraints & Limitations](docs/architecture/12-constraints-and-limitations.md) first.
 
-**Status:** Phase 2 (foundation) is complete. Sign-in, the YouTube connection and AI are **not built yet**.
-Their routes return honest `401` / `501` responses, never invented data.
+**Status:** Phases 1–4 are done: foundation, Google sign-in, YouTube channel connection, and
+background sync of videos and statistics. Analytics, AI and content planning are **not built yet**;
+their seams return honest `501` responses, never invented data.
 
 ## Requirements
 
 - Node.js ≥ 20.11 (22 LTS recommended)
 - pnpm 9 (`corepack enable`)
 - PostgreSQL 16, from **either** the vendored binaries (`pnpm db:start`, no Docker needed) **or** `docker compose up -d`
+- Valkey 8 or Redis ≥ 6.2 for the job queue and shared rate limits: `pnpm redis:start` (finds
+  `valkey-server`/`redis-server`, including `~/.local/valkey/bin`) **or** `docker compose up -d redis`
 
 ## Setup
 
@@ -23,7 +26,9 @@ pnpm db:start                   # PostgreSQL 16 on 127.0.0.1:5433 (creates dev +
 pnpm db:migrate                 # apply migrations to the dev database
 DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/studio_assistant_test pnpm db:migrate:deploy
 pnpm db:seed                    # plans + two development users
-pnpm dev                        # http://localhost:3000
+pnpm redis:start                # Valkey/Redis on 127.0.0.1:6379
+pnpm dev                        # web app: http://localhost:3000
+pnpm worker                     # background sync (separate terminal)
 ```
 
 ## Commands
@@ -36,6 +41,8 @@ pnpm dev                        # http://localhost:3000
 | `pnpm lint` | includes architectural boundary rules |
 | `pnpm format` / `format:check` | Prettier |
 | `pnpm db:start` / `stop` / `status` / `nuke` | local PostgreSQL lifecycle |
+| `pnpm redis:start` / `stop` / `status` | local Valkey/Redis lifecycle |
+| `pnpm worker` / `worker:dev` | background worker (sync jobs + hourly scheduler) |
 | `pnpm db:migrate` / `db:seed` / `db:studio` | Prisma |
 
 ## Rules the tooling enforces
@@ -45,4 +52,4 @@ pnpm dev                        # http://localhost:3000
 - `search.list` (100 quota units) is a lint error inside `src/services/youtube/`.
 - `next start` **exits** if production configuration is incomplete. `next build` needs no secrets.
 - Tests refuse to run against a database whose name does not end in `_test`.
-# Assistant-Studio
+- Every Prisma migration is generated with `--create-only` and read before it is applied.

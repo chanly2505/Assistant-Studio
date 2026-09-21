@@ -66,8 +66,22 @@
       "CONFIGURATION_MISSING": "Channel connection isn't configured on this server yet.",
       "RATE_LIMITED": "Too many attempts. Please wait a few minutes and try again.",
       "UPSTREAM_UNAVAILABLE": "Google is temporarily unavailable. Please try again shortly.",
-      "generic": "Something went wrong. Please try again."
-    }
+      "generic": "Something went wrong. Please try again.",
+      "syncQueued": "Refresh queued. New videos and statistics will appear in a minute or two.",
+      "YOUTUBE_REAUTH_REQUIRED": "Access to this channel expired. Reconnect it to refresh.",
+      "NOT_FOUND": "That channel isn't connected any more."
+    },
+    "viewVideos": "View videos",
+    "refresh": "Refresh now",
+    "syncStatus": {
+      "NEVER_SYNCED": "Not synced yet",
+      "QUEUED": "Sync queued",
+      "SYNCING": "Syncing…",
+      "SYNCED": "Up to date",
+      "FAILED": "Last sync failed — it will retry automatically",
+      "PAUSED": "Sync paused until you reconnect"
+    },
+    "lastSynced": "Videos last fully synced {date}"
   },
   "errors": {
     "unauthenticated": "Please sign in again to continue.",
@@ -117,5 +131,27 @@
     "retry": "Try again",
     "loading": "Loading…",
     "dataThrough": "Data through {date}"
+  },
+  "videos": {
+    "title": "Videos",
+    "back": "All channels",
+    "empty": "No videos yet.",
+    "emptyPending": "No videos yet — the first sync is queued or running. This page fills in as it completes.",
+    "loadMore": "Load more",
+    "published": "Published {date}",
+    "views": "{count} views",
+    "likes": "{count} likes",
+    "likesHidden": "Likes hidden",
+    "comments": "{count} comments",
+    "commentsOff": "Comments off",
+    "shortForm": "3 min or less",
+    "shortFormHint": "By length only — YouTube does not say which videos are Shorts.",
+    "privacy": {
+      "PUBLIC": "Public",
+      "UNLISTED": "Unlisted",
+      "PRIVATE": "Private"
+    },
+    "statsAsOf": "Statistics as of {date}",
+    "noStats": "Statistics not fetched yet"
   }
 }

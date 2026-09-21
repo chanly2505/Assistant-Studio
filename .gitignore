@@ -44,3 +44,4 @@ prisma/*.db-journal
 
 # per-user Claude Code settings
 .claude/settings.local.json
+.redisdata/

@@ -74,7 +74,7 @@ const config = [
             // The one infrastructure element allowed to reach the database.
             { from: 'auth', allow: ['domain', 'lib', 'auth', 'db'] },
             // Worker is a peer of app: a thin entry point over use cases.
-            { from: 'worker', allow: ['module', 'lib', 'domain', 'service', 'db'] },
+            { from: 'worker', allow: ['worker', 'module', 'lib', 'domain', 'service', 'db'] },
           ],
         },
       ],

@@ -1,11 +1,14 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
+import { toAppError } from '@/domain/errors/app-error';
 import { requireUser } from '@/lib/auth/current-user';
-import { localePath } from '@/lib/i18n/paths';
+import { flashCodeFor, localePath } from '@/lib/i18n/paths';
 import { disconnectChannel } from '@/modules/channels/disconnect-channel';
 import { listChannels } from '@/modules/channels/list-channels';
+import { requestManualSync } from '@/modules/sync/schedule';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +19,7 @@ const DISCONNECT_FLASH = {
   failed: 'disconnectRevokeFailed',
 } as const;
 
-type SearchParams = { connected?: string; disconnected?: string; error?: string };
+type SearchParams = { connected?: string; disconnected?: string; synced?: string; error?: string };
 
 export default async function ChannelsPage({
   params,
@@ -45,6 +48,22 @@ export default async function ChannelsPage({
 
     const flash = outcome.ok ? DISCONNECT_FLASH[outcome.data.revocation] : 'generic';
     redirect(localePath(locale, `/channels?disconnected=${flash}`));
+  }
+
+  async function refresh(formData: FormData) {
+    'use server';
+    const current = await requireUser(locale);
+    const channelId = String(formData.get('channelId') ?? '');
+    let target: string;
+    try {
+      await requestManualSync({ userId: current.id, channelId });
+      target = '/channels?synced=1';
+    } catch (error) {
+      // Rate limit, expired grant, missing config: each has its own message.
+      target = `/channels?error=${encodeURIComponent(flashCodeFor(toAppError(error)))}`;
+    }
+    // redirect() throws by design, so it must sit outside the try.
+    redirect(localePath(locale, target));
   }
 
   const flash = flashMessage(query, (key) => (t.has(key) ? t(key) : null));
@@ -105,11 +124,32 @@ export default async function ChannelsPage({
                   </p>
                 )}
 
+                <p className="muted small">
+                  {t(`syncStatus.${channel.syncStatus}`)}
+                  {channel.lastSyncedAt &&
+                    ` · ${t('lastSynced', { date: date.format(new Date(channel.lastSyncedAt)) })}`}
+                </p>
+
                 {channel.needsReauth && <p className="flash flash--bad">{t('needsReauth')}</p>}
               </div>
 
               <div className="channel__actions">
-                {channel.needsReauth && <ConnectForm label={t('reconnect')} />}
+                <Link
+                  className="button"
+                  href={localePath(locale, `/channels/${channel.id}/videos`)}
+                >
+                  {t('viewVideos')}
+                </Link>
+                {channel.needsReauth ? (
+                  <ConnectForm label={t('reconnect')} />
+                ) : (
+                  <form action={refresh}>
+                    <input type="hidden" name="channelId" value={channel.id} />
+                    <button type="submit" className="button">
+                      {t('refresh')}
+                    </button>
+                  </form>
+                )}
                 <form action={disconnect}>
                   <input type="hidden" name="channelId" value={channel.id} />
                   <button type="submit" className="button button--quiet">
@@ -150,6 +190,9 @@ function flashMessage(
 ): { text: string; tone: 'ok' | 'bad' } | null {
   if (query.connected) {
     return { text: translate('flash.connected') ?? '', tone: 'ok' };
+  }
+  if (query.synced) {
+    return { text: translate('flash.syncQueued') ?? '', tone: 'ok' };
   }
   if (query.disconnected) {
     const text = translate(`flash.${query.disconnected}`) ?? translate('flash.generic');

@@ -174,3 +174,88 @@ export const google = {
     });
   },
 };
+
+/* ------------------------------ YouTube catalog ------------------------------ */
+
+export const PLAYLIST_URL = 'https://www.googleapis.com/youtube/v3/playlistItems';
+export const VIDEOS_URL = 'https://www.googleapis.com/youtube/v3/videos';
+
+export interface FakeVideo {
+  id: string;
+  snippet: { title: string; publishedAt: string; description?: string; thumbnails?: object };
+  contentDetails: { duration: string };
+  status: { privacyStatus: 'public' | 'unlisted' | 'private' };
+  statistics: { viewCount?: string; likeCount?: string; commentCount?: string };
+}
+
+export function videoItem(
+  id: string,
+  options: {
+    title?: string;
+    publishedAt?: string;
+    duration?: string;
+    privacy?: 'public' | 'unlisted' | 'private';
+    views?: number;
+    likes?: number | null;
+    comments?: number | null;
+  } = {},
+): FakeVideo {
+  return {
+    id,
+    snippet: {
+      title: options.title ?? `Video ${id}`,
+      publishedAt: options.publishedAt ?? '2026-09-01T10:00:00Z',
+      thumbnails: { medium: { url: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` } },
+    },
+    contentDetails: { duration: options.duration ?? 'PT8M30S' },
+    status: { privacyStatus: options.privacy ?? 'public' },
+    statistics: {
+      viewCount: String(options.views ?? 100),
+      ...(options.likes === null ? {} : { likeCount: String(options.likes ?? 10) }),
+      ...(options.comments === null ? {} : { commentCount: String(options.comments ?? 2) }),
+    },
+  };
+}
+
+/**
+ * A channel's uploads as YouTube would serve them: `playlist` is the uploads
+ * order (newest first), paged; `videos` answers by id. An id in the playlist
+ * but absent from `catalog` behaves like a deleted video.
+ */
+export function youtubeCatalog(
+  playlist: string[],
+  catalog: FakeVideo[],
+  options: { pageSize?: number } = {},
+) {
+  const pageSize = options.pageSize ?? 50;
+  const byId = new Map(catalog.map((video) => [video.id, video]));
+
+  return [
+    http.get(PLAYLIST_URL, ({ request }) => {
+      const url = new URL(request.url);
+      const start = Number(url.searchParams.get('pageToken') ?? '0');
+      const slice = playlist.slice(start, start + pageSize);
+      const next = start + pageSize < playlist.length ? String(start + pageSize) : undefined;
+      return HttpResponse.json({
+        pageInfo: { totalResults: playlist.length },
+        ...(next ? { nextPageToken: next } : {}),
+        items: slice.map((videoId) => ({ contentDetails: { videoId } })),
+      });
+    }),
+    http.get(VIDEOS_URL, ({ request }) => {
+      const ids = (new URL(request.url).searchParams.get('id') ?? '').split(',').filter(Boolean);
+      return HttpResponse.json({
+        items: ids.map((id) => byId.get(id)).filter(Boolean),
+      });
+    }),
+  ];
+}
+
+export function playlistNotFound() {
+  return http.get(PLAYLIST_URL, () =>
+    HttpResponse.json(
+      { error: { code: 404, errors: [{ reason: 'playlistNotFound' }] } },
+      { status: 404 },
+    ),
+  );
+}

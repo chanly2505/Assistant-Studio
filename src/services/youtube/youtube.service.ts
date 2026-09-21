@@ -5,7 +5,13 @@ import type { Logger } from 'pino';
 import { notImplemented } from '@/domain/errors/app-error';
 import type { SecretString } from '@/domain/shared/secret';
 
-import { listOwnedChannels } from './youtube-data.client';
+import {
+  listOwnedChannels,
+  listPlaylistPage,
+  listVideos,
+  type PlaylistPage,
+  type RawVideo,
+} from './youtube-data.client';
 
 /**
  * YouTube integration seam.
@@ -16,9 +22,13 @@ import { listOwnedChannels } from './youtube-data.client';
  * service layer may not touch the database — that belongs to the application
  * layer, in src/modules/youtube/access-token.ts.
  *
- * Implemented: listOwnedChannels (Phase 3).
- * NOT_IMPLEMENTED until Phase 4/5: videos, stats, analytics. They throw rather
- * than return invented data.
+ * The service exposes single-call primitives. Paging decisions ("stop at the
+ * first video we already know"), quota reservation per call and persistence
+ * all need the database, so they live in src/modules/sync/.
+ *
+ * Implemented: listOwnedChannels (Phase 3), listPlaylistPage + listVideos
+ * (Phase 4). NOT_IMPLEMENTED until Phase 5: analytics — it throws rather than
+ * returning invented data.
  */
 
 export interface YouTubeChannelSummary {
@@ -34,21 +44,6 @@ export interface YouTubeChannelSummary {
   subscriberCount: bigint | null;
   viewCount: bigint;
   videoCount: number;
-}
-
-export interface YouTubeVideoSummary {
-  youtubeVideoId: string;
-  title: string;
-  description: string;
-  publishedAt: Date;
-  durationSeconds: number;
-  privacyStatus: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
-  thumbnailUrl: string | null;
-  tags: string[];
-  categoryId: string | null;
-  viewCount: bigint;
-  likeCount: bigint | null;
-  commentCount: bigint | null;
 }
 
 export interface AnalyticsRow {
@@ -67,21 +62,16 @@ export interface YouTubeService {
   /** channels.list(mine=true) — 1 quota unit. */
   listOwnedChannels(accessToken: SecretString, log?: Logger): Promise<YouTubeChannelSummary[]>;
 
-  /**
-   * Walks the uploads playlist, then batches videos.list 50 ids at a time.
-   * Never uses search.list (100 units) — docs/architecture/06 §6.2.
-   */
-  listChannelVideos(
+  /** One page (≤50 ids) of the uploads playlist, newest first — 1 quota unit. */
+  listPlaylistPage(
     accessToken: SecretString,
-    uploadsPlaylistId: string,
-    options?: { since?: Date; maxPages?: number },
-  ): Promise<YouTubeVideoSummary[]>;
+    playlistId: string,
+    pageToken: string | null,
+    log?: Logger,
+  ): Promise<PlaylistPage>;
 
-  /** videos.list for a batch of ids — 1 unit per 50. */
-  getVideoStats(
-    accessToken: SecretString,
-    youtubeVideoIds: string[],
-  ): Promise<YouTubeVideoSummary[]>;
+  /** Up to 50 videos' metadata + statistics — 1 quota unit. */
+  listVideos(accessToken: SecretString, videoIds: string[], log?: Logger): Promise<RawVideo[]>;
 
   /**
    * youtubeAnalytics.reports.query. Callers pass a trailing window that overlaps
@@ -100,12 +90,17 @@ export class GoogleYouTubeService implements YouTubeService {
     return listOwnedChannels(accessToken, log);
   }
 
-  async listChannelVideos(): Promise<never> {
-    throw notImplemented('youtube.listChannelVideos');
+  listPlaylistPage(
+    accessToken: SecretString,
+    playlistId: string,
+    pageToken: string | null,
+    log?: Logger,
+  ) {
+    return listPlaylistPage(accessToken, playlistId, pageToken, log);
   }
 
-  async getVideoStats(): Promise<never> {
-    throw notImplemented('youtube.getVideoStats');
+  listVideos(accessToken: SecretString, videoIds: string[], log?: Logger) {
+    return listVideos(accessToken, videoIds, log);
   }
 
   async getChannelAnalytics(): Promise<never> {
