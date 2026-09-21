@@ -1,0 +1,12 @@
+.next*/
+node_modules/
+coverage/
+.pgdata/
+pnpm-lock.yaml
+prisma/migrations/
+next-env.d.ts
+# Editor/agent tooling config — not project source
+.claude/
+# Hand-written prose; reflowing would churn reviewed documents
+docs/
+*.md

@@ -1,0 +1,42 @@
+# Local dependencies for developers who have Docker.
+#
+# Without Docker, `pnpm db:start` runs the same PostgreSQL 16 from vendored
+# binaries on the same port, so DATABASE_URL is identical either way.
+# Redis is not used until Phase 4; it is declared here so the compose file is
+# complete when that lands.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ysa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: studio_assistant
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ysa-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

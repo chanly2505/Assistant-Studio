@@ -1,0 +1,46 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next*/
+out/
+next-env.d.ts
+
+# production
+build/
+dist/
+
+# environment — NEVER commit real values
+.env
+.env.local
+.env.*.local
+.env.test
+!.env.example
+
+# local database (embedded-postgres data directory)
+.pgdata/
+*.log
+
+# test output
+coverage/
+.vitest/
+test-results/
+playwright-report/
+
+# prisma
+prisma/*.db
+prisma/*.db-journal
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# typescript incremental cache
+*.tsbuildinfo
+
+# per-user Claude Code settings
+.claude/settings.local.json

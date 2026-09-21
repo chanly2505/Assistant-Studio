@@ -1,0 +1,686 @@
+// YouTube Studio Assistant — database schema
+// Design rationale: docs/architecture/03-database-architecture.md
+//
+// Conventions:
+//   - cuid() ids everywhere; YouTube's own ids are stored in `youtube*Id` columns.
+//   - BigInt for every YouTube counter (viewCount exceeds int4 on real channels).
+//   - Money as integer micros (costMicros). No floats near money.
+//   - Analytics dates are YouTube reporting dates (@db.Date), never converted.
+//   - Emails are stored lowercased by the application; there is no citext extension.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum ConnectionStatus {
+  ACTIVE
+  REAUTH_REQUIRED
+  REVOKED
+}
+
+enum ChannelSyncStatus {
+  NEVER_SYNCED
+  QUEUED
+  SYNCING
+  SYNCED
+  FAILED
+  PAUSED
+}
+
+enum SyncTier {
+  HOT
+  WARM
+  COLD
+}
+
+enum VideoPrivacyStatus {
+  PUBLIC
+  UNLISTED
+  PRIVATE
+}
+
+enum ContentSource {
+  AI
+  USER
+}
+
+enum IdeaStatus {
+  SAVED
+  PROMOTED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  IDEA
+  SCRIPTING
+  FILMING
+  EDITING
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AssetKind {
+  TITLE
+  DESCRIPTION
+  SCRIPT
+  TAGS
+  THUMBNAIL_BRIEF
+  CHAPTERS
+}
+
+enum CalendarEntryType {
+  REMINDER
+  TASK
+  NOTE
+}
+
+enum CalendarEntryStatus {
+  PENDING
+  DONE
+  CANCELLED
+}
+
+enum AIFeature {
+  IDEAS
+  TITLES
+  DESCRIPTION
+  SCRIPT
+  PLAN
+}
+
+enum AIGenerationStatus {
+  PENDING
+  OK
+  INVALID_OUTPUT
+  PROVIDER_ERROR
+  TIMEOUT
+  FILTERED
+}
+
+enum ExternalApi {
+  YOUTUBE_DATA
+  YOUTUBE_ANALYTICS
+  OPENAI
+}
+
+enum SyncJobType {
+  CHANNEL_BACKFILL
+  CHANNEL_STATS
+  VIDEO_DELTA
+  VIDEO_FULL
+  VIDEO_STATS
+  ANALYTICS
+}
+
+enum SyncJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum ActorType {
+  USER
+  SYSTEM
+  WORKER
+}
+
+// ---------------------------------------------------------------------------
+// Identity & auth  (Account/Session/VerificationToken follow the Auth.js shape)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  locale        String     @default("en")
+  timezone      String     @default("UTC")
+  planKey       String     @default("free")
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  accounts      Account[]
+  sessions      Session[]
+  settings      UserSettings?
+  connections   YouTubeConnection[]
+  channels      YouTubeChannel[]
+  ideas         ContentIdea[]
+  projects      ContentProject[]
+  calendar      CalendarEntry[]
+  generations   AIGeneration[]
+  usageCounters UsageCounter[]
+  auditLogs     AuditLog[]
+  oauthStates   OAuthState[]
+  plan          Plan                @relation(fields: [planKey], references: [key])
+
+  @@index([status, deletedAt])
+  @@index([planKey])
+}
+
+/// Auth.js account record. Holds the **login** grant only.
+/// YouTube tokens live in YouTubeConnection — see docs/architecture/05 §5.1.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserSettings {
+  userId           String   @id
+  defaultChannelId String?
+  contentLanguage  String   @default("en")
+  brandVoice       String?  @db.Text
+  emailDigest      Boolean  @default(true)
+  onboardingStep   String   @default("connect_channel")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Plan {
+  key                String   @id
+  name               String
+  maxChannels        Int      @default(1)
+  monthlyGenerations Json
+  features           Json     @default("{}")
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+
+  users User[]
+}
+
+/// Single-use, session-bound CSRF + PKCE state for the channel-connect flow.
+/// Without the userId binding an attacker can attach their channel to a victim's
+/// account — see docs/architecture/05 §5.3 step 2.
+model OAuthState {
+  state        String   @id
+  userId       String
+  codeVerifier String
+  redirectTo   String?
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// YouTube
+// ---------------------------------------------------------------------------
+
+/// One OAuth grant against a Google identity, carrying YouTube scopes.
+/// A grant is NOT a channel: one user may hold several, and a revoked grant
+/// must not force deletion of the channel history it produced.
+model YouTubeConnection {
+  id                    String           @id @default(cuid())
+  userId                String
+  googleSub             String
+  googleEmail           String
+  /// AES-256-GCM ciphertext: base64(version || iv || authTag || ciphertext).
+  /// AAD is the connection id, so a blob cannot be moved between rows.
+  encryptedRefreshToken String           @db.Text
+  encryptionKeyVersion  Int              @default(1)
+  scopes                String[]
+  status                ConnectionStatus @default(ACTIVE)
+  grantedAt             DateTime         @default(now())
+  lastRefreshedAt       DateTime?
+  lastRefreshError      String?
+  revokedAt             DateTime?
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channels YouTubeChannel[]
+
+  @@unique([userId, googleSub])
+  @@index([status])
+}
+
+model YouTubeChannel {
+  id                String            @id @default(cuid())
+  connectionId      String
+  /// Denormalised from connection so every repository query can scope by user
+  /// in a single WHERE clause without a join.
+  userId            String
+  youtubeChannelId  String            @unique
+  title             String
+  handle            String?
+  description       String?           @db.Text
+  thumbnailUrl      String?
+  country           String?
+  uploadsPlaylistId String
+  publishedAt       DateTime?
+  syncStatus        ChannelSyncStatus @default(NEVER_SYNCED)
+  lastFullSyncAt    DateTime?
+  lastStatsSyncAt   DateTime?
+  lastAnalyticsDate DateTime?         @db.Date
+  connectedAt       DateTime          @default(now())
+  disconnectedAt    DateTime?
+
+  connection     YouTubeConnection      @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  settings       ChannelSettings?
+  videos         YouTubeVideo[]
+  statsSnapshots ChannelStatsSnapshot[]
+  analytics      ChannelAnalyticsDaily[]
+  syncJobs       SyncJob[]
+  ideas          ContentIdea[]
+  projects       ContentProject[]
+  calendar       CalendarEntry[]
+  generations    AIGeneration[]
+
+  @@index([userId, disconnectedAt])
+  @@index([connectionId])
+  @@index([syncStatus])
+}
+
+model ChannelSettings {
+  channelId       String   @id
+  niche           String?
+  targetAudience  String?  @db.Text
+  brandVoice      String?  @db.Text
+  keywords        String[]
+  contentLanguage String   @default("en")
+  uploadCadence   String?
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  channel YouTubeChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+/// Cumulative counters from the Data API, true as of an instant. Append-only.
+model ChannelStatsSnapshot {
+  id                       String   @id @default(cuid())
+  channelId                String
+  capturedAt               DateTime @default(now())
+  /// NULL when the creator hides it (YouTube omits the field entirely). Never
+  /// store 0 for a hidden count: that would present "hidden" as a real zero.
+  subscriberCount          BigInt?
+  viewCount                BigInt
+  videoCount               Int
+  /// YouTube rounds subscriberCount to 3 significant figures — docs/architecture/12 §C.
+  subscriberCountIsRounded Boolean  @default(true)
+
+  channel YouTubeChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, capturedAt(sort: Desc)])
+}
+
+model YouTubeVideo {
+  id                   String              @id @default(cuid())
+  channelId            String
+  youtubeVideoId       String              @unique
+  title                String
+  description          String?             @db.Text
+  publishedAt          DateTime
+  durationSeconds      Int
+  privacyStatus        VideoPrivacyStatus  @default(PUBLIC)
+  thumbnailUrl         String?
+  tags                 String[]
+  categoryId           String?
+  defaultLanguage      String?
+  isShort              Boolean             @default(false)
+  syncTier             SyncTier            @default(HOT)
+  lastStatsSyncAt      DateTime?
+  firstSeenAt          DateTime            @default(now())
+  deletedFromYouTubeAt DateTime?
+
+  channel        YouTubeChannel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  statsSnapshots VideoStatsSnapshot[]
+  analytics      VideoAnalyticsDaily[]
+  projects       ContentProject[]
+
+  @@index([channelId, publishedAt(sort: Desc)])
+  @@index([channelId, syncTier, lastStatsSyncAt])
+}
+
+model VideoStatsSnapshot {
+  id           String   @id @default(cuid())
+  videoId      String
+  capturedAt   DateTime @default(now())
+  viewCount    BigInt
+  likeCount    BigInt?
+  commentCount BigInt?
+
+  video YouTubeVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId, capturedAt(sort: Desc)])
+}
+
+/// Per-day metrics from the Analytics API. Revisable for ~3 days, so these are
+/// upserted on (channelId, date) — never appended. docs/architecture/12 §C.
+model ChannelAnalyticsDaily {
+  id                      String   @id @default(cuid())
+  channelId               String
+  date                    DateTime @db.Date
+  views                   BigInt   @default(0)
+  estimatedMinutesWatched BigInt   @default(0)
+  averageViewDuration     Int      @default(0)
+  subscribersGained       Int      @default(0)
+  subscribersLost         Int      @default(0)
+  likes                   Int      @default(0)
+  comments                Int      @default(0)
+  shares                  Int      @default(0)
+  fetchedAt               DateTime @default(now())
+  /// True while the row falls inside YouTube's revision window.
+  isProvisional           Boolean  @default(true)
+
+  channel YouTubeChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, date])
+  @@index([channelId, date(sort: Desc)])
+}
+
+model VideoAnalyticsDaily {
+  id                      String   @id @default(cuid())
+  videoId                 String
+  date                    DateTime @db.Date
+  views                   BigInt   @default(0)
+  estimatedMinutesWatched BigInt   @default(0)
+  averageViewDuration     Int      @default(0)
+  averageViewPercentage   Float    @default(0)
+  likes                   Int      @default(0)
+  comments                Int      @default(0)
+  shares                  Int      @default(0)
+  subscribersGained       Int      @default(0)
+  fetchedAt               DateTime @default(now())
+  isProvisional           Boolean  @default(true)
+
+  video YouTubeVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, date])
+  @@index([videoId, date(sort: Desc)])
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+model ContentIdea {
+  id              String        @id @default(cuid())
+  userId          String
+  channelId       String?
+  title           String
+  angle           String?       @db.Text
+  hook            String?       @db.Text
+  format          String?
+  keywords        String[]
+  rationale       String?       @db.Text
+  source          ContentSource @default(AI)
+  aiGenerationId  String?
+  status          IdeaStatus    @default(SAVED)
+  projectId       String?
+  createdAt       DateTime      @default(now())
+  archivedAt      DateTime?
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel      YouTubeChannel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  project      ContentProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  aiGeneration AIGeneration?   @relation(fields: [aiGenerationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, createdAt(sort: Desc)])
+  @@index([channelId])
+  @@index([projectId])
+  @@index([aiGenerationId])
+}
+
+model ContentProject {
+  id               String        @id @default(cuid())
+  userId           String
+  channelId        String?
+  title            String
+  locale           String        @default("en")
+  status           ProjectStatus @default(IDEA)
+  scheduledFor     DateTime?
+  publishedAt      DateTime?
+  /// Reserved for a future publishing phase; v1 never writes to YouTube.
+  publishedVideoId String?
+  notes            String?       @db.Text
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel        YouTubeChannel?      @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  publishedVideo YouTubeVideo?        @relation(fields: [publishedVideoId], references: [id], onDelete: SetNull)
+  assets         ContentAsset[]
+  statusEvents   ContentStatusEvent[]
+  ideas          ContentIdea[]
+  calendar       CalendarEntry[]
+  generations    AIGeneration[]
+
+  @@index([userId, status, updatedAt(sort: Desc)])
+  @@index([userId, scheduledFor])
+  @@index([channelId])
+  @@index([publishedVideoId])
+}
+
+/// One table for every kind of generated text attached to a project.
+/// Replaces separate title/description/script tables — docs/architecture/03 §3.1.
+model ContentAsset {
+  id             String        @id @default(cuid())
+  projectId      String
+  kind           AssetKind
+  locale         String        @default("en")
+  body           String        @db.Text
+  version        Int           @default(1)
+  isSelected     Boolean       @default(false)
+  aiGenerationId String?
+  createdBy      ContentSource @default(AI)
+  createdAt      DateTime      @default(now())
+
+  project      ContentProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  aiGeneration AIGeneration?  @relation(fields: [aiGenerationId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, kind, locale, version])
+  @@index([projectId, kind, isSelected])
+  @@index([aiGenerationId])
+}
+
+/// Status history, so "track content status" is auditable rather than a single
+/// mutable column.
+model ContentStatusEvent {
+  id              String         @id @default(cuid())
+  projectId       String
+  fromStatus      ProjectStatus?
+  toStatus        ProjectStatus
+  changedByUserId String?
+  note            String?
+  createdAt       DateTime       @default(now())
+
+  project ContentProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt(sort: Desc)])
+}
+
+/// Calendar entries exist only for dated things with no project behind them.
+/// Projects reach the calendar through ContentProject.scheduledFor.
+model CalendarEntry {
+  id        String              @id @default(cuid())
+  userId    String
+  channelId String?
+  projectId String?
+  title     String
+  entryType CalendarEntryType   @default(TASK)
+  startsAt  DateTime
+  endsAt    DateTime?
+  allDay    Boolean             @default(false)
+  status    CalendarEntryStatus @default(PENDING)
+  notes     String?             @db.Text
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel YouTubeChannel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  project ContentProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startsAt])
+  @@index([channelId])
+  @@index([projectId])
+}
+
+// ---------------------------------------------------------------------------
+// AI, usage, ops
+// ---------------------------------------------------------------------------
+
+/// The generation record itself, not a counter. Created PENDING *before* the
+/// provider call so spend is recorded even if the request dies mid-flight.
+model AIGeneration {
+  id            String             @id @default(cuid())
+  userId        String?
+  channelId     String?
+  projectId     String?
+  feature       AIFeature
+  provider      String
+  model         String
+  promptVersion String
+  locale        String             @default("en")
+  /// sha256(feature|promptVersion|model|locale|normalised input) — cache key.
+  inputHash     String
+  inputTokens   Int                @default(0)
+  outputTokens  Int                @default(0)
+  costMicros    BigInt             @default(0)
+  latencyMs     Int?
+  status        AIGenerationStatus @default(PENDING)
+  errorCode     String?
+  outputJson    Json?
+  createdAt     DateTime           @default(now())
+  completedAt   DateTime?
+
+  user    User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  channel YouTubeChannel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  project ContentProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  ideas   ContentIdea[]
+  assets  ContentAsset[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, feature, inputHash])
+  @@index([status, createdAt])
+  @@index([channelId])
+  @@index([projectId])
+}
+
+model UsageCounter {
+  id          String    @id @default(cuid())
+  userId      String
+  periodStart DateTime  @db.Date
+  feature     AIFeature
+  count       Int       @default(0)
+  tokensUsed  Int       @default(0)
+  costMicros  BigInt    @default(0)
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodStart, feature])
+  @@index([periodStart])
+}
+
+model ApiQuotaLedger {
+  id           String      @id @default(cuid())
+  api          ExternalApi
+  day          DateTime    @db.Date
+  unitsUsed    BigInt      @default(0)
+  requestCount Int         @default(0)
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([api, day])
+}
+
+model SyncJob {
+  id             String        @id @default(cuid())
+  channelId      String
+  jobType        SyncJobType
+  status         SyncJobStatus @default(QUEUED)
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  itemsProcessed Int           @default(0)
+  quotaUnitsUsed Int           @default(0)
+  errorCode      String?
+  errorMessage   String?       @db.Text
+  attempt        Int           @default(1)
+  createdAt      DateTime      @default(now())
+
+  channel YouTubeChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, jobType, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+}
+
+/// userId is nulled (not cascaded) on account deletion so operational history
+/// survives with no PII attached. ipHash is a salted SHA-256, never a raw IP.
+model AuditLog {
+  id           String    @id @default(cuid())
+  userId       String?
+  actorType    ActorType @default(USER)
+  action       String
+  resourceType String?
+  resourceId   String?
+  ipHash       String?
+  userAgent    String?
+  metadata     Json      @default("{}")
+  createdAt    DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+}

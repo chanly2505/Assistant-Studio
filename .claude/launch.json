@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": [
+        "-c",
+        "export PATH=\"$HOME/.local/node/bin:$PATH\" NEXT_TELEMETRY_DISABLED=1 && pnpm dev"
+      ],
+      "port": 3000
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "YouTube Studio Assistant",
+    "tagline": "Plan, write and understand your channel — without the guesswork."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "channels": "Channels",
+    "studio": "Studio",
+    "projects": "Projects",
+    "calendar": "Calendar",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {email}"
+  },
+  "home": {
+    "status": "System status",
+    "healthy": "All systems operational",
+    "degraded": "Some systems are unavailable",
+    "checkDatabase": "Database",
+    "getStarted": "Sign in to get started",
+    "openChannels": "Go to your channels"
+  },
+  "signIn": {
+    "title": "Sign in",
+    "subtitle": "Use your Google account. Signing in does not give us access to your YouTube channel — you connect that separately, and only if you choose to.",
+    "withGoogle": "Continue with Google",
+    "notConfigured": "Google sign-in isn't configured on this server yet. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and AUTH_SECRET.",
+    "error": {
+      "AccessDenied": "Sign-in was cancelled, or your Google email address isn't verified.",
+      "Configuration": "Sign-in is misconfigured on the server. Please try again later.",
+      "OAuthAccountNotLinked": "This email is already linked to a different sign-in method.",
+      "Verification": "That sign-in link has expired. Please try again.",
+      "Default": "We couldn't sign you in. Please try again."
+    }
+  },
+  "channels": {
+    "title": "Your channels",
+    "subtitle": "Connect a YouTube channel so we can read its videos and analytics. We only ask for read access and never post to YouTube.",
+    "empty": "No channel connected yet.",
+    "connect": "Connect a YouTube channel",
+    "connectAnother": "Connect another channel",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect",
+    "subscribers": "{count} subscribers",
+    "subscribersHidden": "Subscriber count hidden",
+    "videos": "{count} videos",
+    "views": "{count} views",
+    "roundedNote": "YouTube rounds subscriber counts to three significant figures.",
+    "statsAsOf": "As of {date}",
+    "needsReauth": "Access expired — reconnect to keep this channel up to date.",
+    "privacyNote": "Disconnecting revokes our access at Google and keeps the data we already stored, so reconnecting later picks up where you left off.",
+    "flash": {
+      "connected": "Channel connected.",
+      "disconnected": "Channel disconnected and our access at Google revoked.",
+      "disconnectedAlreadyInvalid": "Channel disconnected. Our access had already been removed at Google.",
+      "disconnectRevokeFailed": "Channel disconnected here, but we couldn't reach Google to revoke access. Please remove “YouTube Studio Assistant” at myaccount.google.com/permissions.",
+      "OAUTH_DENIED": "You cancelled on Google's screen, so nothing was connected.",
+      "OAUTH_STATE_INVALID": "That connection link expired or was already used. Please start again.",
+      "OAUTH_FAILED": "Google didn't complete the connection. Please try again.",
+      "YOUTUBE_INSUFFICIENT_SCOPE": "Both permissions are needed: reading your channel and reading its analytics. Please try again and leave both boxes ticked.",
+      "YOUTUBE_NO_CHANNEL": "That Google account doesn't have a YouTube channel. If your channel belongs to a brand account, choose it on Google's account screen.",
+      "YOUTUBE_QUOTA_EXCEEDED": "We've reached today's YouTube data limit. Please try again tomorrow.",
+      "CHANNEL_LIMIT": "You've reached your plan's channel limit. Disconnect a channel or upgrade to add another.",
+      "CHANNEL_OWNED": "That channel is already connected to a different account here. It can be connected to only one account at a time.",
+      "CONFIGURATION_MISSING": "Channel connection isn't configured on this server yet.",
+      "RATE_LIMITED": "Too many attempts. Please wait a few minutes and try again.",
+      "UPSTREAM_UNAVAILABLE": "Google is temporarily unavailable. Please try again shortly.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "errors": {
+    "unauthenticated": "Please sign in again to continue.",
+    "forbidden": "You don't have access to this.",
+    "notFound": "We couldn't find that.",
+    "validationFailed": "Some of the information you entered isn't valid.",
+    "conflict": "That conflicts with something that already exists.",
+    "rateLimited": "Too many requests. Try again in {retryAfter} seconds.",
+    "internal": "Something went wrong on our side. Reference: {requestId}",
+    "notImplemented": "This feature isn't available yet.",
+    "upstreamUnavailable": "A service we depend on is temporarily unavailable.",
+    "serviceUnavailable": "The service is temporarily unavailable. Please try again shortly.",
+    "configurationMissing": "This feature isn't configured on this server yet.",
+    "ai": {
+      "limitReached": "You've used all your generations for this month. Your limit resets on {resetAt}.",
+      "invalidOutput": "We couldn't generate that. Please try again.",
+      "unavailable": "AI features are temporarily unavailable."
+    },
+    "youtube": {
+      "reauthRequired": "Your YouTube connection expired. Reconnect your channel to keep syncing.",
+      "insufficientScope": "We need permission to read your YouTube analytics. Please reconnect and approve access.",
+      "quotaExceeded": "Data updates are paused for today and will resume automatically.",
+      "noChannel": "That Google account doesn't have a YouTube channel."
+    },
+    "oauth": {
+      "denied": "The connection was cancelled.",
+      "stateInvalid": "That connection link expired or was already used. Please start again.",
+      "failed": "Google didn't complete the connection. Please try again."
+    },
+    "channels": {
+      "limitReached": "You've reached your plan's limit of {limit} channels.",
+      "ownedByAnotherUser": "That channel is already connected to another account."
+    },
+    "validation": {
+      "invalid_type": "This value has the wrong type.",
+      "invalid_string": "This value isn't formatted correctly.",
+      "too_small": "This value is too short.",
+      "too_big": "This value is too long.",
+      "invalid_enum_value": "Choose one of the allowed options.",
+      "unrecognized_keys": "Unexpected field.",
+      "custom": "This value isn't valid.",
+      "contentType": "Expected JSON.",
+      "invalidJson": "The request body isn't valid JSON."
+    }
+  },
+  "common": {
+    "retry": "Try again",
+    "loading": "Loading…",
+    "dataThrough": "Data through {date}"
+  }
+}
