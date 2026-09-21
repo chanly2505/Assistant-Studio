@@ -45,3 +45,4 @@ pnpm dev                        # http://localhost:3000
 - `search.list` (100 quota units) is a lint error inside `src/services/youtube/`.
 - `next start` **exits** if production configuration is incomplete. `next build` needs no secrets.
 - Tests refuse to run against a database whose name does not end in `_test`.
+# Assistant-Studio
