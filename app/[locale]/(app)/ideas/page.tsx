@@ -4,9 +4,9 @@ import { redirect } from 'next/navigation';
 
 import { Field } from '@/components/forms/field';
 import { SubmitButton } from '@/components/forms/submit-button';
+import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
-import { errorMessageKey } from '@/lib/i18n/error-key';
 import { createIdea, deleteIdea, listIdeas, setIdeaStatus } from '@/modules/content/ideas';
 import { CreateIdeaRequest } from '@/modules/content/inputs';
 import { promoteIdea } from '@/modules/content/projects';
@@ -32,10 +32,8 @@ export default async function IdeasPage({
     ? (query.tab as Tab)
     : 'SAVED';
   const t = await getTranslations('ideas');
-  const tRoot = await getTranslations();
   const result = await listIdeas(user.id, tab);
   const { ideas, counts } = result.ok ? result.data : { ideas: [], counts: {} };
-  const errorKey = errorMessageKey(query.error);
 
   async function add(formData: FormData) {
     'use server';
@@ -83,11 +81,7 @@ export default async function IdeasPage({
         <p className="muted">{t('subtitle')}</p>
       </header>
 
-      {errorKey && tRoot.has(errorKey) && (
-        <p className="flash flash--bad" role="alert">
-          {tRoot(errorKey as 'errors.notFound')}
-        </p>
-      )}
+      <ErrorFlash error={query.error} />
 
       <section className="card">
         <h2>{t('add.heading')}</h2>

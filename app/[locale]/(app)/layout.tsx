@@ -33,12 +33,14 @@ export default async function AppLayout({
   return (
     <>
       <header className="topbar">
-        <nav className="topbar__nav" aria-label="Main">
+        <nav className="topbar__nav" aria-label={t('main')}>
+          <Link href={localePath(locale, '/dashboard')}>{t('dashboard')}</Link>
           <Link href={localePath(locale, '/channels')}>{t('channels')}</Link>
           <Link href={localePath(locale, '/studio')}>{t('studio')}</Link>
           <Link href={localePath(locale, '/ideas')}>{t('ideas')}</Link>
           <Link href={localePath(locale, '/projects')}>{t('projects')}</Link>
           <Link href={localePath(locale, '/calendar')}>{t('calendar')}</Link>
+          <Link href={localePath(locale, '/settings')}>{t('settings')}</Link>
         </nav>
         <div className="topbar__user">
           <span className="muted">{t('signedInAs', { email: user.email })}</span>

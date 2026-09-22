@@ -4,12 +4,22 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { RELEASED_LOCALES, isReleasedLocale } from '@/lib/i18n/routing';
+import Link from 'next/link';
+
+import { Suspense } from 'react';
+
+import { LocaleSwitcher } from '@/components/locale-switcher';
+import {
+  AVAILABLE_LOCALES,
+  LOCALE_LABELS,
+  isAvailableLocale,
+  isDraftLocale,
+} from '@/lib/i18n/routing';
 
 import './globals.css';
 
 export function generateStaticParams() {
-  return RELEASED_LOCALES.map((locale) => ({ locale }));
+  return AVAILABLE_LOCALES.map((locale) => ({ locale }));
 }
 
 export async function generateMetadata({
@@ -35,15 +45,43 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!isReleasedLocale(locale)) notFound();
+  if (!isAvailableLocale(locale)) notFound();
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  const t = await getTranslations({ locale, namespace: 'app' });
 
   return (
     <html lang={locale}>
       <body>
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        {isDraftLocale(locale) && (
+          // An unreviewed catalogue must never pass for a finished translation.
+          <p className="draft-notice" role="note">
+            {t('draftNotice')} <Link href="/en">English</Link>
+          </p>
+        )}
+        <NextIntlClientProvider messages={messages}>
+          {children}
+          {AVAILABLE_LOCALES.length > 1 && (
+            <footer className="site-footer">
+              {/* useSearchParams needs a Suspense boundary under static rendering. */}
+              <Suspense>
+                <LocaleSwitcher
+                  current={locale}
+                  label={t('language')}
+                  options={AVAILABLE_LOCALES.map((code) => ({
+                    code,
+                    label: LOCALE_LABELS[code],
+                    draft: isDraftLocale(code),
+                  }))}
+                />
+              </Suspense>
+              {AVAILABLE_LOCALES.some(isDraftLocale) && (
+                <p className="small muted">* {t('draftLegend')}</p>
+              )}
+            </footer>
+          )}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

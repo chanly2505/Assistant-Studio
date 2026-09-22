@@ -4,8 +4,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import { requireUser } from '@/lib/auth/current-user';
+import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { localePath } from '@/lib/i18n/paths';
 import { listVideos } from '@/modules/videos/list-videos';
+import { userTimeZone } from '@/modules/content/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +33,7 @@ export default async function VideosPage({
   setRequestLocale(locale);
 
   const user = await requireUser(locale);
+  const zone = await userTimeZone(user.id);
   const result = await listVideos({ userId: user.id, channelId, cursor });
   // Unknown, foreign or malformed: all look the same from outside.
   if (!result.ok) notFound();
@@ -38,7 +41,7 @@ export default async function VideosPage({
   const t = await getTranslations('videos');
   const tc = await getTranslations('channels');
   const number = new Intl.NumberFormat(locale);
-  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
+  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: zone });
   const { channel, videos, nextCursor } = result.data;
   const syncing = ['NEVER_SYNCED', 'QUEUED', 'SYNCING'].includes(channel.syncStatus);
 
@@ -52,7 +55,7 @@ export default async function VideosPage({
           {channel.title} · {t('title')}
         </h1>
         <p className="muted">
-          {tc(`syncStatus.${channel.syncStatus}`)}
+          {dynamicKeys(tc)(`syncStatus.${channel.syncStatus}`)}
           {channel.lastFullSyncAt &&
             ` · ${tc('lastSynced', { date: date.format(new Date(channel.lastFullSyncAt)) })}`}
         </p>

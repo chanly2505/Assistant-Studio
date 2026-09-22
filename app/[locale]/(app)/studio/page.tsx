@@ -7,6 +7,7 @@ import { SubmitButton } from '@/components/forms/submit-button';
 import { SUPPORTED_LOCALES } from '@/domain/ai/types';
 import { requireUser } from '@/lib/auth/current-user';
 import { LOCALE_LABELS } from '@/lib/i18n/routing';
+import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { localePath } from '@/lib/i18n/paths';
 import { listChannels } from '@/modules/channels/list-channels';
 import {
@@ -19,6 +20,7 @@ import {
 } from '@/modules/ai/generate';
 import { getUsage, listGenerations } from '@/modules/ai/history';
 import { getProject } from '@/modules/content/projects';
+import { getUserSettings } from '@/modules/settings/settings';
 import {
   DescriptionRequest,
   IdeasRequest,
@@ -26,6 +28,7 @@ import {
   ScriptRequest,
   TitlesRequest,
 } from '@/modules/ai/inputs';
+import { userTimeZone } from '@/modules/content/shared';
 
 export const dynamic = 'force-dynamic';
 // A strong-model generation can run long; keep the action alive for it.
@@ -57,22 +60,28 @@ export default async function StudioPage({
   setRequestLocale(locale);
 
   const user = await requireUser(locale);
+  const zone = await userTimeZone(user.id);
   const tool: Tool = (TOOLS as readonly string[]).includes(query.tool ?? '')
     ? (query.tool as Tool)
     : 'ideas';
 
   const t = await getTranslations('studio');
-  const [channels, usage, history, projectResult] = await Promise.all([
+  const [channels, usage, history, projectResult, userSettings] = await Promise.all([
     listChannels({ userId: user.id }),
     getUsage(user.id),
     listGenerations(user.id, 10),
     query.project ? getProject(user.id, query.project) : Promise.resolve(null),
+    getUserSettings(user.id),
   ]);
+  const preferences = userSettings.ok ? userSettings.data : null;
   // Generating for a project: prefill from it and carry it to the result page.
   const project = projectResult?.ok ? projectResult.data : null;
   const selectedTitle = project?.assets.find((a) => a.kind === 'TITLE' && a.isSelected)?.body;
   const workingTitle = selectedTitle ?? project?.title ?? '';
   const channelList = channels.ok ? channels.data.channels : [];
+  // The user's default channel, if it is still connected; otherwise the first.
+  const defaultChannelId =
+    channelList.find((c) => c.id === preferences?.defaultChannelId)?.id ?? channelList[0]?.id ?? '';
   const toolUsage = usage.ok
     ? usage.data.features.find((f) => f.feature === FEATURE_BY_SLUG[tool])
     : undefined;
@@ -81,7 +90,11 @@ export default async function StudioPage({
         new Date(usage.data.resetsAt),
       )
     : '';
-  const dateTime = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' });
+  const dateTime = new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: zone,
+  });
 
   async function generate(formData: FormData) {
     'use server';
@@ -135,9 +148,10 @@ export default async function StudioPage({
     );
   }
 
+  const td = dynamicKeys(t);
   const errorText = query.error
-    ? t.has(`errors.${query.error}`)
-      ? t(`errors.${query.error}`)
+    ? td.has(`errors.${query.error}`)
+      ? td(`errors.${query.error}`)
       : t('errors.generic')
     : null;
   const exhausted = toolUsage ? toolUsage.remaining === 0 : false;
@@ -270,7 +284,7 @@ export default async function StudioPage({
             >
               <select
                 name="channelId"
-                defaultValue={project ? (project.channelId ?? '') : (channelList[0]?.id ?? '')}
+                defaultValue={project ? (project.channelId ?? '') : defaultChannelId}
               >
                 <option value="">{t('fields.noChannel')}</option>
                 {channelList.map((channel) => (
@@ -281,7 +295,10 @@ export default async function StudioPage({
               </select>
             </Field>
             <Field label={t('fields.language')} hint={t('languageNote')}>
-              <select name="locale" defaultValue={project?.locale ?? 'en'}>
+              <select
+                name="locale"
+                defaultValue={project?.locale ?? preferences?.contentLanguage ?? 'en'}
+              >
                 {SUPPORTED_LOCALES.map((code) => (
                   <option key={code} value={code}>
                     {LOCALE_LABELS[code]}

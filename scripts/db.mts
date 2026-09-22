@@ -24,7 +24,8 @@ const LOG_FILE = path.join(DATA_DIR, 'server.log');
 const PORT = 5433;
 const USER = 'postgres';
 const PASSWORD = 'postgres';
-const DATABASES = ['studio_assistant', 'studio_assistant_test'];
+// dev, unit/integration tests (truncated by every run), and the e2e browser tests.
+const DATABASES = ['studio_assistant', 'studio_assistant_test', 'studio_assistant_e2e'];
 
 function binDir(): string {
   const require = createRequire(import.meta.url);

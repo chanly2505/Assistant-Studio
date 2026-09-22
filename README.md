@@ -6,7 +6,10 @@ Architecture and constraints: [`docs/architecture/`](docs/architecture/README.md
 
 **Status:** Phases 1–7 are done: foundation, Google sign-in, YouTube channel connection,
 background sync of videos and statistics, analytics, the AI Studio tools, and content management
-(ideas, projects with versioned titles/descriptions/scripts, status history, calendar).
+(ideas, projects with versioned titles/descriptions/scripts, status history, calendar), and
+localisation and settings (Home with getting-started steps, Settings, Usage; Khmer, Thai,
+Vietnamese and Chinese as hidden drafts awaiting native review, see
+[`messages/README.md`](messages/README.md)).
 
 **Just want to run it?** Follow [`docs/RUNNING.md`](docs/RUNNING.md).
 
@@ -39,6 +42,7 @@ pnpm worker                     # background sync (separate terminal)
 |---|---|
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm verify` | typecheck + lint + tests (the CI gate) |
+| `pnpm test:e2e` | Playwright in your installed Chrome (own port 3100, build folder and database) |
 | `pnpm test` / `test:coverage` | Vitest (real PostgreSQL, Prisma never mocked) |
 | `pnpm lint` | includes architectural boundary rules |
 | `pnpm format` / `format:check` | Prettier |

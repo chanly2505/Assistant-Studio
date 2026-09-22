@@ -1,0 +1,12 @@
+{
+  "//": "Used only by the e2e server (NEXT_DIST_DIR=.next-e2e). Next.js adds its output folder's types to whichever tsconfig it is given; listing it here keeps it from rewriting tsconfig.json.",
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next-e2e/types/**/*.ts",
+    "eslint.config.mjs"
+  ],
+  "exclude": ["node_modules", ".next", ".next-e2e", "coverage", ".claude"]
+}

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { isGoogleSignInConfigured, signIn } from '@/lib/auth/auth';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { localePath } from '@/lib/i18n/paths';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export default async function SignInPage({
   const { error } = await searchParams;
   setRequestLocale(locale);
 
-  if (await getCurrentUser()) redirect(localePath(locale, '/channels'));
+  if (await getCurrentUser()) redirect(localePath(locale, '/dashboard'));
 
   const t = await getTranslations('signIn');
   // Auth.js reports errors as ?error=<Name>. Unknown names fall back to a generic
@@ -29,7 +30,7 @@ export default async function SignInPage({
 
   async function signInWithGoogle() {
     'use server';
-    await signIn('google', { redirectTo: localePath(locale, '/channels') });
+    await signIn('google', { redirectTo: localePath(locale, '/dashboard') });
   }
 
   return (
@@ -41,7 +42,7 @@ export default async function SignInPage({
 
       {errorKey && (
         <p className="flash flash--bad" role="alert">
-          {t(`error.${errorKey}`)}
+          {dynamicKeys(t)(`error.${errorKey}`)}
         </p>
       )}
 

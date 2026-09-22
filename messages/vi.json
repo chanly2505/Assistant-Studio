@@ -1,0 +1,642 @@
+{
+  "app": {
+    "name": "YouTube Studio Assistant",
+    "tagline": "Lên kế hoạch, viết và hiểu kênh của bạn — không cần đoán mò.",
+    "draftNotice": "Bản dịch này là bản nháp, người bản ngữ chưa kiểm duyệt. Một số từ ngữ có thể chưa đúng.",
+    "language": "Ngôn ngữ",
+    "draftLegend": "Bản dịch nháp, chưa được kiểm duyệt."
+  },
+  "nav": {
+    "dashboard": "Trang chủ",
+    "channels": "Kênh",
+    "studio": "Studio",
+    "projects": "Dự án",
+    "calendar": "Lịch",
+    "settings": "Cài đặt",
+    "signOut": "Đăng xuất",
+    "signedInAs": "Đã đăng nhập với {email}",
+    "ideas": "Ý tưởng",
+    "main": "Menu chính"
+  },
+  "home": {
+    "status": "Trạng thái hệ thống",
+    "healthy": "Mọi hệ thống đều hoạt động bình thường",
+    "degraded": "Một số hệ thống không khả dụng",
+    "checkDatabase": "Cơ sở dữ liệu",
+    "getStarted": "Đăng nhập để bắt đầu",
+    "openChannels": "Đi tới kênh của bạn"
+  },
+  "signIn": {
+    "title": "Đăng nhập",
+    "subtitle": "Dùng tài khoản Google của bạn. Đăng nhập không cho chúng tôi quyền truy cập kênh YouTube của bạn — bạn kết nối kênh riêng, và chỉ khi bạn muốn.",
+    "withGoogle": "Tiếp tục với Google",
+    "notConfigured": "Máy chủ này chưa cấu hình đăng nhập bằng Google. Hãy đặt GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET và AUTH_SECRET.",
+    "error": {
+      "AccessDenied": "Đăng nhập đã bị hủy, hoặc địa chỉ email Google của bạn chưa được xác minh.",
+      "Configuration": "Đăng nhập bị cấu hình sai trên máy chủ. Vui lòng thử lại sau.",
+      "OAuthAccountNotLinked": "Email này đã được liên kết với một phương thức đăng nhập khác.",
+      "Verification": "Liên kết đăng nhập đó đã hết hạn. Vui lòng thử lại.",
+      "Default": "Chúng tôi không thể đăng nhập cho bạn. Vui lòng thử lại."
+    }
+  },
+  "channels": {
+    "title": "Kênh của bạn",
+    "subtitle": "Kết nối một kênh YouTube để chúng tôi đọc video và số liệu phân tích của kênh. Chúng tôi chỉ xin quyền đọc và không bao giờ đăng gì lên YouTube.",
+    "empty": "Chưa kết nối kênh nào.",
+    "connect": "Kết nối kênh YouTube",
+    "connectAnother": "Kết nối thêm một kênh",
+    "reconnect": "Kết nối lại",
+    "disconnect": "Ngắt kết nối",
+    "subscribers": "{count} người đăng ký",
+    "subscribersHidden": "Số người đăng ký bị ẩn",
+    "videos": "{count} video",
+    "views": "{count} lượt xem",
+    "roundedNote": "YouTube làm tròn số người đăng ký đến ba chữ số có nghĩa.",
+    "statsAsOf": "Tính đến {date}",
+    "needsReauth": "Quyền truy cập đã hết hạn — hãy kết nối lại để kênh này luôn được cập nhật.",
+    "privacyNote": "Ngắt kết nối sẽ thu hồi quyền của chúng tôi tại Google và giữ lại dữ liệu đã lưu, nên khi kết nối lại sau này bạn sẽ tiếp tục từ chỗ đã dừng.",
+    "flash": {
+      "connected": "Đã kết nối kênh.",
+      "disconnected": "Đã ngắt kết nối kênh và thu hồi quyền của chúng tôi tại Google.",
+      "disconnectedAlreadyInvalid": "Đã ngắt kết nối kênh. Quyền của chúng tôi đã bị gỡ tại Google từ trước.",
+      "disconnectRevokeFailed": "Đã ngắt kết nối kênh tại đây, nhưng chúng tôi không liên lạc được với Google để thu hồi quyền. Vui lòng gỡ “YouTube Studio Assistant” tại myaccount.google.com/permissions.",
+      "OAUTH_DENIED": "Bạn đã hủy trên màn hình của Google nên không có gì được kết nối.",
+      "OAUTH_STATE_INVALID": "Liên kết kết nối đó đã hết hạn hoặc đã được dùng. Vui lòng bắt đầu lại.",
+      "OAUTH_FAILED": "Google chưa hoàn tất việc kết nối. Vui lòng thử lại.",
+      "YOUTUBE_INSUFFICIENT_SCOPE": "Cần cả hai quyền: đọc kênh của bạn và đọc số liệu phân tích của kênh. Vui lòng thử lại và giữ nguyên cả hai ô đã đánh dấu.",
+      "YOUTUBE_NO_CHANNEL": "Tài khoản Google đó không có kênh YouTube. Nếu kênh của bạn thuộc một tài khoản thương hiệu, hãy chọn tài khoản đó trên màn hình tài khoản của Google.",
+      "YOUTUBE_QUOTA_EXCEEDED": "Chúng tôi đã dùng hết giới hạn dữ liệu YouTube hôm nay. Vui lòng thử lại vào ngày mai.",
+      "CHANNEL_LIMIT": "Bạn đã đạt giới hạn số kênh của gói. Hãy ngắt kết nối một kênh hoặc nâng cấp để thêm kênh khác.",
+      "CHANNEL_OWNED": "Kênh đó đã được kết nối với một tài khoản khác ở đây. Mỗi kênh chỉ kết nối được với một tài khoản tại một thời điểm.",
+      "CONFIGURATION_MISSING": "Máy chủ này chưa cấu hình tính năng kết nối kênh.",
+      "RATE_LIMITED": "Thử quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.",
+      "UPSTREAM_UNAVAILABLE": "Google tạm thời không khả dụng. Vui lòng thử lại sau ít phút.",
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "syncQueued": "Đã xếp hàng làm mới. Video và số liệu mới sẽ xuất hiện trong một hai phút.",
+      "YOUTUBE_REAUTH_REQUIRED": "Quyền truy cập kênh này đã hết hạn. Hãy kết nối lại để làm mới.",
+      "NOT_FOUND": "Kênh đó không còn được kết nối."
+    },
+    "viewVideos": "Xem video",
+    "refresh": "Làm mới ngay",
+    "syncStatus": {
+      "NEVER_SYNCED": "Chưa đồng bộ",
+      "QUEUED": "Đang chờ đồng bộ",
+      "SYNCING": "Đang đồng bộ…",
+      "SYNCED": "Đã cập nhật",
+      "FAILED": "Lần đồng bộ gần nhất thất bại — sẽ tự động thử lại",
+      "PAUSED": "Tạm dừng đồng bộ cho đến khi bạn kết nối lại"
+    },
+    "lastSynced": "Video được đồng bộ đầy đủ lần cuối {date}",
+    "viewAnalytics": "Xem phân tích"
+  },
+  "errors": {
+    "unauthenticated": "Vui lòng đăng nhập lại để tiếp tục.",
+    "forbidden": "Bạn không có quyền truy cập mục này.",
+    "notFound": "Chúng tôi không tìm thấy mục đó.",
+    "validationFailed": "Một số thông tin bạn nhập không hợp lệ.",
+    "conflict": "Điều này xung đột với một mục đã tồn tại.",
+    "rateLimited": "Quá nhiều yêu cầu. Hãy thử lại sau {retryAfter} giây.",
+    "internal": "Đã xảy ra lỗi ở phía chúng tôi. Mã tham chiếu: {requestId}",
+    "notImplemented": "Tính năng này chưa có.",
+    "upstreamUnavailable": "Một dịch vụ mà chúng tôi sử dụng tạm thời không khả dụng.",
+    "serviceUnavailable": "Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau ít phút.",
+    "configurationMissing": "Máy chủ này chưa cấu hình tính năng này.",
+    "ai": {
+      "limitReached": "Bạn đã dùng hết lượt tạo nội dung của tháng này. Giới hạn sẽ được đặt lại vào {resetAt}.",
+      "invalidOutput": "Chúng tôi không tạo được nội dung đó. Vui lòng thử lại.",
+      "unavailable": "Tính năng AI tạm thời không khả dụng.",
+      "refused": "AI không thể giúp với yêu cầu đó. Hãy thử diễn đạt lại.",
+      "notConfigured": "Máy chủ này chưa thiết lập tính năng AI."
+    },
+    "youtube": {
+      "reauthRequired": "Kết nối YouTube của bạn đã hết hạn. Hãy kết nối lại kênh để tiếp tục đồng bộ.",
+      "insufficientScope": "Chúng tôi cần quyền đọc số liệu phân tích YouTube của bạn. Vui lòng kết nối lại và cho phép truy cập.",
+      "quotaExceeded": "Việc cập nhật dữ liệu tạm dừng hôm nay và sẽ tự động tiếp tục.",
+      "noChannel": "Tài khoản Google đó không có kênh YouTube."
+    },
+    "oauth": {
+      "denied": "Việc kết nối đã bị hủy.",
+      "stateInvalid": "Liên kết kết nối đó đã hết hạn hoặc đã được dùng. Vui lòng bắt đầu lại.",
+      "failed": "Google chưa hoàn tất việc kết nối. Vui lòng thử lại."
+    },
+    "channels": {
+      "limitReached": "Bạn đã đạt giới hạn của gói là {limit} kênh.",
+      "ownedByAnotherUser": "Kênh đó đã được kết nối với một tài khoản khác."
+    },
+    "validation": {
+      "invalid_type": "Giá trị này có kiểu không đúng.",
+      "invalid_string": "Giá trị này không đúng định dạng.",
+      "too_small": "Giá trị này quá ngắn.",
+      "too_big": "Giá trị này quá dài.",
+      "invalid_enum_value": "Hãy chọn một trong các lựa chọn cho phép.",
+      "unrecognized_keys": "Trường không mong đợi.",
+      "custom": "Giá trị này không hợp lệ.",
+      "contentType": "Cần dữ liệu JSON.",
+      "invalidJson": "Nội dung yêu cầu không phải JSON hợp lệ."
+    },
+    "content": {
+      "needsScheduleDate": "Hãy đặt ngày và giờ trước khi đánh dấu là đã lên lịch.",
+      "ideaPromoted": "Ý tưởng này đã trở thành dự án, nên nó thuộc về dự án đó.",
+      "tooManyProjects": "Bạn đã đạt số dự án đang hoạt động tối đa. Hãy lưu trữ bớt để thêm dự án mới.",
+      "tooManyVersions": "Mục này đã đạt số phiên bản tối đa. Hãy bắt đầu dự án mới hoặc tiếp tục sửa phiên bản đã chọn.",
+      "assetTooLong": "Văn bản đó dài hơn mức cho phép với loại nội dung này.",
+      "generationFailed": "Kết quả AI đó chưa hoàn tất, nên không có gì để thêm.",
+      "notAnAsset": "Loại kết quả AI này không thể thêm vào dự án.",
+      "compareSameKind": "Chỉ có thể so sánh các phiên bản cùng loại.",
+      "badTimeZone": "Không nhận ra múi giờ đó."
+    },
+    "settings": {
+      "languageUnavailable": "Ngôn ngữ đó chưa có sẵn."
+    }
+  },
+  "common": {
+    "retry": "Thử lại",
+    "loading": "Đang tải…",
+    "dataThrough": "Dữ liệu đến {date}"
+  },
+  "videos": {
+    "title": "Video",
+    "back": "Tất cả kênh",
+    "empty": "Chưa có video nào.",
+    "emptyPending": "Chưa có video — lần đồng bộ đầu tiên đang chờ hoặc đang chạy. Trang này sẽ đầy dần khi hoàn tất.",
+    "loadMore": "Tải thêm",
+    "published": "Đăng ngày {date}",
+    "views": "{count} lượt xem",
+    "likes": "{count} lượt thích",
+    "likesHidden": "Lượt thích bị ẩn",
+    "comments": "{count} bình luận",
+    "commentsOff": "Đã tắt bình luận",
+    "shortForm": "3 phút trở xuống",
+    "shortFormHint": "Chỉ dựa trên độ dài — YouTube không cho biết video nào là Shorts.",
+    "privacy": {
+      "PUBLIC": "Công khai",
+      "UNLISTED": "Không công khai",
+      "PRIVATE": "Riêng tư"
+    },
+    "statsAsOf": "Số liệu tính đến {date}",
+    "noStats": "Chưa lấy số liệu"
+  },
+  "analytics": {
+    "title": "Phân tích",
+    "back": "Tất cả kênh",
+    "periods": {
+      "7": "7 ngày",
+      "28": "28 ngày",
+      "90": "90 ngày",
+      "365": "365 ngày"
+    },
+    "periodLabel": "Khoảng thời gian",
+    "range": "{from} – {to}",
+    "planLimited": "Gói của bạn bao gồm {days} ngày lịch sử phân tích.",
+    "dataThrough": "Số liệu chính thức đến {date}. Vài ngày gần nhất vẫn có thể thay đổi — YouTube cần 2–3 ngày để đếm xong.",
+    "noFinalData": "YouTube vẫn đang xử lý những ngày này. Số liệu có thể thay đổi.",
+    "empty": "Chưa có số liệu phân tích. Lần đồng bộ đầu tiên chạy ngay sau khi bạn kết nối kênh; dữ liệu YouTube cũng đến trễ 2–3 ngày, nên kênh mới có thể mất vài ngày mới hiển thị.",
+    "kpi": {
+      "views": "Lượt xem",
+      "watchHours": "Thời gian xem (giờ)",
+      "avgDuration": "Thời lượng xem trung bình",
+      "netSubscribers": "Người đăng ký ròng"
+    },
+    "change": "{sign}{percent} so với {days} ngày trước đó",
+    "noComparison": "Không đủ dữ liệu trước đó để so sánh",
+    "gapsNote": "{known} trên {total} ngày có dữ liệu.",
+    "charts": {
+      "views": "Lượt xem hằng ngày",
+      "subscribers": "Người đăng ký tăng trừ giảm, theo ngày",
+      "subscribersWeekly": "Người đăng ký tăng trừ giảm, theo tuần",
+      "noData": "Không có dữ liệu",
+      "provisional": "Có thể còn thay đổi",
+      "showTable": "Hiển thị dạng bảng",
+      "date": "Ngày",
+      "weekOf": "Tuần của"
+    },
+    "topVideos": {
+      "title": "Video nổi bật trong khoảng này",
+      "note": "Số liệu hằng ngày được thu thập cho các video mới đăng và video nổi bật của bạn, nên các video cũ, ít người xem có thể không xuất hiện ở đây.",
+      "video": "Video",
+      "views": "Lượt xem",
+      "watchHours": "Giờ xem",
+      "empty": "Chưa có số liệu theo từng video cho khoảng này."
+    },
+    "limitations": "API của YouTube không cung cấp số lần hiển thị hay tỷ lệ nhấp, nên chúng không được hiển thị ở đây. Chúng tôi không yêu cầu dữ liệu doanh thu.",
+    "changeAbsolute": "{value} so với {days} ngày trước đó"
+  },
+  "studio": {
+    "title": "Studio",
+    "subtitle": "Nhận ý tưởng, tiêu đề, mô tả, kịch bản và kế hoạch cho video của bạn. Mọi thứ bạn tạo đều được lưu vào lịch sử.",
+    "tools": {
+      "ideas": "Ý tưởng video",
+      "titles": "Tiêu đề",
+      "description": "Mô tả",
+      "script": "Kịch bản",
+      "plan": "Kế hoạch nội dung"
+    },
+    "fields": {
+      "topic": "Video nói về điều gì?",
+      "topicHint": "Ví dụ: \"những quán ăn sáng ngon nhất ở Phnôm Pênh\"",
+      "count": "Số lượng ý tưởng",
+      "existingTitle": "Tiêu đề hiện tại của bạn (không bắt buộc)",
+      "title": "Tiêu đề video",
+      "summary": "Trong video có những gì?",
+      "includeChapters": "Thêm chương kèm mốc thời gian",
+      "outline": "Dàn ý hoặc ghi chú của bạn (không bắt buộc)",
+      "targetMinutes": "Độ dài (phút)",
+      "goal": "Bạn muốn đạt được điều gì?",
+      "goalHint": "Ví dụ: \"đạt 1.000 người đăng ký\" hoặc \"đưa thêm khách đến nhà hàng của tôi\"",
+      "weeks": "Số tuần",
+      "channel": "Dùng một kênh làm bối cảnh",
+      "noChannel": "Không dùng kênh",
+      "language": "Viết kết quả bằng"
+    },
+    "languageNote": "Kết quả bằng tiếng Khmer, Thái, Việt hoặc Trung có thể cần chỉnh sửa nhiều hơn tiếng Anh.",
+    "channelNote": "Dùng một kênh sẽ cho AI biết chủ đề, khán giả, độ dài video thường gặp và các tiêu đề tốt nhất gần đây. Không bao giờ gửi dữ liệu người xem.",
+    "generate": "Tạo",
+    "generating": "Đang tạo… có thể mất đến một phút",
+    "remaining": "Còn {remaining} trên {limit} trong tháng này · đặt lại {date}",
+    "noneLeft": "Công cụ này đã hết lượt trong tháng. Đặt lại {date}.",
+    "history": "Kết quả gần đây",
+    "historyEmpty": "Chưa tạo gì.",
+    "status": {
+      "OK": "Xong",
+      "INVALID_OUTPUT": "Thất bại",
+      "PROVIDER_ERROR": "Thất bại",
+      "TIMEOUT": "Hết thời gian",
+      "FILTERED": "Bị từ chối"
+    },
+    "errors": {
+      "AI_LIMIT_REACHED": "Bạn đã dùng hết lượt của công cụ này trong tháng.",
+      "AI_REFUSED": "AI không thể giúp với yêu cầu đó. Hãy thử diễn đạt lại.",
+      "AI_INVALID_OUTPUT": "Câu trả lời của AI chưa đúng. Vui lòng thử lại — lần này không tính vào lượt của bạn.",
+      "AI_UNAVAILABLE": "Dịch vụ AI đang bận hoặc không khả dụng. Vui lòng thử lại sau ít phút — lần này không tính vào lượt của bạn.",
+      "CONFIGURATION_MISSING": "Máy chủ này chưa thiết lập tính năng AI.",
+      "RATE_LIMITED": "Quá nhiều yêu cầu trong thời gian ngắn. Vui lòng đợi một phút.",
+      "VALIDATION_FAILED": "Vui lòng kiểm tra biểu mẫu — có mục bị thiếu hoặc quá dài.",
+      "NOT_FOUND": "Kênh đó không khả dụng.",
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
+    "forProject": "Đang làm cho “{title}”. Ở trang kết quả, bạn có thể thêm nội dung đã tạo vào dự án này.",
+    "backToProject": "Quay lại dự án"
+  },
+  "results": {
+    "back": "Quay lại Studio",
+    "cached": "Bạn đã yêu cầu điều này gần đây, nên đây là cùng kết quả đó. Lần này không tính vào lượt của bạn.",
+    "failed": "Yêu cầu này không tạo ra kết quả.",
+    "input": "Bạn đã yêu cầu",
+    "model": "Được tạo bằng {model}",
+    "ideas": {
+      "angle": "Góc nhìn",
+      "hook": "Câu mở đầu",
+      "keywords": "Từ khóa",
+      "why": "Vì sao có thể hiệu quả",
+      "save": "Lưu ý tưởng",
+      "saved": "Đã lưu",
+      "saving": "Đang lưu…"
+    },
+    "formats": {
+      "short": "Ngắn",
+      "long": "Dài",
+      "tutorial": "Hướng dẫn",
+      "vlog": "Vlog",
+      "interview": "Phỏng vấn",
+      "review": "Đánh giá"
+    },
+    "titles": {
+      "strength": "AI ước tính: {value} trên 5",
+      "strengthNote": "Đây là ý kiến của AI, không phải phép đo hiệu quả thực tế của tiêu đề.",
+      "characters": "{count} ký tự"
+    },
+    "titleStyles": {
+      "curiosity": "Gây tò mò",
+      "howto": "Hướng dẫn",
+      "listicle": "Danh sách",
+      "emotional": "Cảm xúc",
+      "direct": "Trực tiếp"
+    },
+    "description": {
+      "copyHint": "Chọn văn bản để sao chép vào YouTube Studio.",
+      "hashtags": "Hashtag",
+      "chapters": "Chương"
+    },
+    "script": {
+      "hook": "Câu mở đầu",
+      "cta": "Lời kêu gọi hành động",
+      "duration": "Khoảng {minutes} phút khi đọc"
+    },
+    "plan": {
+      "cadence": "Tần suất gợi ý",
+      "week": "Tuần",
+      "titleCol": "Video",
+      "format": "Định dạng",
+      "goal": "Mục đích"
+    },
+    "toProject": {
+      "heading": "Thêm vào dự án",
+      "choose": "Dự án",
+      "submit": "Thêm vào dự án",
+      "submitting": "Đang thêm…",
+      "pickTitle": "Thêm tiêu đề này",
+      "none": "Hãy tạo một dự án trước để gom kết quả vào đó.",
+      "create": "Đi tới dự án",
+      "added": "Đã thêm vào “{project}” dưới dạng phiên bản {version}.",
+      "alreadyAdded": "Đã có trong “{project}” (phiên bản {version}).",
+      "open": "Mở dự án",
+      "target": "Mọi thứ bạn thêm sẽ vào “{project}”."
+    }
+  },
+  "content": {
+    "statuses": {
+      "IDEA": "Ý tưởng",
+      "SCRIPTING": "Viết kịch bản",
+      "FILMING": "Quay phim",
+      "EDITING": "Dựng phim",
+      "SCHEDULED": "Đã lên lịch",
+      "PUBLISHED": "Đã đăng",
+      "ARCHIVED": "Đã lưu trữ"
+    },
+    "kinds": {
+      "TITLE": "Tiêu đề",
+      "DESCRIPTION": "Mô tả",
+      "SCRIPT": "Kịch bản",
+      "TAGS": "Thẻ",
+      "THUMBNAIL_BRIEF": "Yêu cầu ảnh thu nhỏ",
+      "CHAPTERS": "Chương"
+    },
+    "sources": {
+      "AI": "AI",
+      "USER": "Bạn"
+    },
+    "timeZone": {
+      "shownIn": "Giờ hiển thị theo {zone}.",
+      "use": "Dùng {zone} thay thế"
+    },
+    "saved": "Đã lưu."
+  },
+  "ideas": {
+    "title": "Ý tưởng",
+    "subtitle": "Ý tưởng bạn đã lưu từ Studio hoặc tự viết. Hãy bắt đầu dự án khi một ý tưởng đáng làm.",
+    "tabs": {
+      "SAVED": "Đã lưu",
+      "PROMOTED": "Trong dự án",
+      "ARCHIVED": "Đã lưu trữ"
+    },
+    "add": {
+      "heading": "Thêm ý tưởng",
+      "title": "Ý tưởng",
+      "angle": "Góc nhìn",
+      "hook": "Câu mở đầu",
+      "keywords": "Từ khóa",
+      "keywordsHint": "Phân cách bằng dấu phẩy.",
+      "submit": "Lưu ý tưởng",
+      "submitting": "Đang lưu…"
+    },
+    "empty": "Chưa có ý tưởng nào ở đây.",
+    "emptyHint": "Tạo vài ý tưởng trong Studio, hoặc thêm ở trên.",
+    "studioLink": "Tạo ý tưởng trong Studio",
+    "fromAi": "Từ AI",
+    "yours": "Của bạn",
+    "startProject": "Bắt đầu dự án",
+    "starting": "Đang bắt đầu…",
+    "openProject": "Mở dự án",
+    "archive": "Lưu trữ",
+    "restore": "Khôi phục",
+    "delete": "Xóa"
+  },
+  "projects": {
+    "title": "Dự án",
+    "subtitle": "Mọi video bạn đang làm, theo từng giai đoạn.",
+    "new": {
+      "heading": "Dự án mới",
+      "title": "Tên tạm",
+      "submit": "Tạo dự án",
+      "submitting": "Đang tạo…"
+    },
+    "empty": "Chưa có dự án nào. Hãy bắt đầu ở đây, hoặc từ một ý tưởng.",
+    "column": {
+      "empty": "Không có gì ở đây"
+    },
+    "scheduledFor": "Lên lịch {date}",
+    "assets": "{count, plural, =0 {Chưa có phiên bản} other {# phiên bản}}",
+    "archivedLink": "Dự án đã lưu trữ ({count})",
+    "activeLink": "Quay lại bảng",
+    "archivedTitle": "Dự án đã lưu trữ",
+    "moveTo": "Chuyển sang",
+    "move": "Chuyển",
+    "next": "Chuyển sang {status}"
+  },
+  "project": {
+    "back": "Tất cả dự án",
+    "details": "Chi tiết",
+    "fields": {
+      "title": "Tên tạm",
+      "notes": "Ghi chú",
+      "scheduledFor": "Ngày và giờ đăng",
+      "scheduledHint": "Để trống nếu chưa quyết định.",
+      "channel": "Kênh",
+      "noChannel": "Không có kênh",
+      "language": "Ngôn ngữ"
+    },
+    "save": "Lưu chi tiết",
+    "saving": "Đang lưu…",
+    "status": {
+      "heading": "Trạng thái",
+      "current": "Hiện tại: {status}",
+      "moveTo": "Chuyển sang",
+      "note": "Ghi chú (không bắt buộc)",
+      "move": "Chuyển",
+      "moving": "Đang chuyển…",
+      "archive": "Lưu trữ dự án",
+      "restore": "Khôi phục về {status}",
+      "published": "Đã đăng {date}"
+    },
+    "history": {
+      "heading": "Lịch sử",
+      "created": "Tạo ở trạng thái {status}",
+      "moved": "{from} → {to}"
+    },
+    "assets": {
+      "heading": "Tiêu đề, mô tả và kịch bản",
+      "intro": "Mỗi thay đổi được lưu thành một phiên bản mới. Hãy chọn phiên bản bạn sẽ dùng.",
+      "none": "Chưa có phiên bản nào.",
+      "version": "Phiên bản {version}",
+      "selected": "Đã chọn",
+      "select": "Dùng bản này",
+      "compare": "So sánh với bản đã chọn",
+      "by": "bởi {source}",
+      "characters": "{count} / {max} ký tự",
+      "add": "Thêm phiên bản",
+      "kind": "Loại",
+      "body": "Nội dung",
+      "addSubmit": "Lưu phiên bản",
+      "adding": "Đang lưu…",
+      "generate": "Tạo bằng AI",
+      "generateTitles": "Tiêu đề",
+      "generateDescription": "Mô tả",
+      "generateScript": "Kịch bản"
+    },
+    "calendar": {
+      "heading": "Trên lịch",
+      "none": "Dự án này chưa có gì trên lịch.",
+      "add": "Thêm lời nhắc"
+    },
+    "danger": {
+      "heading": "Xóa dự án",
+      "body": "Dự án sẽ biến mất khỏi bảng và lịch của bạn. Các ý tưởng của nó sẽ quay về danh sách ý tưởng.",
+      "submit": "Xóa dự án"
+    }
+  },
+  "compare": {
+    "title": "So sánh phiên bản",
+    "back": "Quay lại dự án",
+    "legend": "Dòng chỉ có trong phiên bản {before} được đánh dấu −, dòng chỉ có trong phiên bản {after} được đánh dấu +.",
+    "identical": "Hai phiên bản này giống hệt nhau."
+  },
+  "calendar": {
+    "title": "Lịch",
+    "subtitle": "Video đã lên lịch và lời nhắc của riêng bạn.",
+    "previous": "Tháng trước",
+    "next": "Tháng sau",
+    "thisMonth": "Tháng này",
+    "empty": "Tháng này chưa có lịch nào.",
+    "listHeading": "Tháng này",
+    "project": "Video",
+    "entryTypes": {
+      "REMINDER": "Lời nhắc",
+      "TASK": "Việc cần làm",
+      "NOTE": "Ghi chú"
+    },
+    "add": {
+      "heading": "Thêm vào lịch",
+      "title": "Nội dung",
+      "type": "Loại",
+      "date": "Ngày",
+      "time": "Giờ",
+      "timeHint": "Để trống nếu là cả ngày.",
+      "notes": "Ghi chú",
+      "project": "Dự án (không bắt buộc)",
+      "noProject": "Không có",
+      "submit": "Thêm",
+      "submitting": "Đang thêm…"
+    },
+    "allDay": "Cả ngày",
+    "done": "Đánh dấu xong",
+    "undo": "Đánh dấu chưa xong",
+    "delete": "Xóa",
+    "statusDone": "Xong"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Đã đăng nhập với {email}.",
+    "you": {
+      "heading": "Bạn",
+      "language": "Ngôn ngữ của ứng dụng",
+      "languageHint": "Ngôn ngữ của menu, nút và thông báo.",
+      "timezone": "Múi giờ",
+      "timezoneHint": "Ngày đăng và lịch dùng múi giờ này."
+    },
+    "content": {
+      "heading": "Nội dung của bạn",
+      "language": "Ngôn ngữ cho nội dung mới",
+      "languageHint": "Studio và các dự án mới bắt đầu bằng ngôn ngữ này. Bạn vẫn có thể đổi mỗi lần.",
+      "channel": "Kênh mặc định",
+      "channelHint": "Studio dùng kênh này trừ khi bạn chọn kênh khác.",
+      "noChannel": "Không có mặc định"
+    },
+    "save": "Lưu cài đặt",
+    "saving": "Đang lưu…",
+    "channels": {
+      "heading": "Về các kênh của bạn",
+      "intro": "Cho các công cụ AI biết mỗi kênh nói về điều gì, để gợi ý phù hợp hơn.",
+      "connect": "Hãy kết nối một kênh YouTube trước",
+      "edit": "Mô tả “{channel}”"
+    },
+    "usageLink": "Xem những gì bạn đã dùng trong tháng này"
+  },
+  "channelSettings": {
+    "back": "Cài đặt",
+    "title": "Về “{channel}”",
+    "intro": "Các công cụ AI dùng những câu trả lời này cho mọi gợi ý dành cho kênh này. Câu trả lời ngắn gọn, đơn giản là tốt nhất, và bạn có thể đổi bất cứ lúc nào.",
+    "niche": "Kênh nói về điều gì?",
+    "nicheHint": "Ví dụ: ẩm thực đường phố ở Phnôm Pênh.",
+    "audience": "Ai xem kênh?",
+    "audienceHint": "Ví dụ: du khách đang lên kế hoạch và người địa phương tìm quán mới.",
+    "voice": "Bạn nói chuyện với người xem thế nào?",
+    "voiceHint": "Ví dụ: ấm áp và hài hước, không bao giờ ép buộc.",
+    "keywords": "Từ mọi người hay tìm kiếm",
+    "keywordsHint": "Phân cách bằng dấu phẩy. Tối đa 15.",
+    "privacy": "Thông tin này được gửi cho AI cùng với yêu cầu của bạn, kèm một bản tóm tắt về kênh: bạn đăng bài thường xuyên thế nào, video thường dài bao lâu, và tiêu đề các video tốt nhất gần đây cùng kết quả so với mức trung bình của bạn. Không có gì khác từ kênh của bạn được gửi đi, và không bao giờ gửi dữ liệu người xem.",
+    "save": "Lưu",
+    "saving": "Đang lưu…"
+  },
+  "dashboard": {
+    "title": "Trang chủ",
+    "subtitle": "Lên kế hoạch, viết và theo dõi video của bạn ở một nơi.",
+    "checklist": {
+      "heading": "Bắt đầu",
+      "progress": "Đã xong {completed} trên {total} bước.",
+      "allDone": "Bạn đã sẵn sàng. Mọi thứ bên dưới luôn sẵn khi bạn cần.",
+      "done": "đã xong",
+      "todo": "chưa xong"
+    },
+    "steps": {
+      "connectChannel": {
+        "title": "Kết nối kênh YouTube của bạn",
+        "why": "Chúng tôi đọc video và số liệu của bạn (không thay đổi gì) để lời khuyên phù hợp với kênh.",
+        "action": "Kết nối kênh"
+      },
+      "describeChannel": {
+        "title": "Cho biết kênh của bạn nói về điều gì",
+        "why": "Hai ba câu trả lời ngắn giúp mọi gợi ý của AI hữu ích hơn.",
+        "action": "Mô tả kênh của bạn"
+      },
+      "firstIdeas": {
+        "title": "Nhận những ý tưởng video đầu tiên",
+        "why": "Nhập một chủ đề và AI sẽ gợi ý các ý tưởng bạn có thể lưu lại.",
+        "action": "Nhận ý tưởng"
+      },
+      "startProject": {
+        "title": "Biến một ý tưởng thành dự án",
+        "why": "Một dự án giữ tiêu đề, mô tả và kịch bản của một video ở cùng một chỗ.",
+        "action": "Mở ý tưởng của bạn"
+      },
+      "scheduleVideo": {
+        "title": "Chọn ngày đăng",
+        "why": "Video đã lên lịch sẽ hiện trên lịch để bạn thấy những gì sắp tới.",
+        "action": "Mở dự án của bạn"
+      }
+    },
+    "shortcuts": {
+      "heading": "Đi tới",
+      "studio": "Studio: tạo ý tưởng, tiêu đề, mô tả và kịch bản",
+      "projects": "Dự án: mọi thứ bạn đang làm",
+      "calendar": "Lịch: những gì sắp tới",
+      "usage": "Mức dùng: những gì bạn đã dùng trong tháng này"
+    }
+  },
+  "usage": {
+    "title": "Mức dùng",
+    "subtitle": "Những gì bạn đã dùng và những gì còn lại.",
+    "ai": {
+      "heading": "Công cụ AI trong tháng này",
+      "resets": "Lượt của bạn sẽ bắt đầu lại vào {date}.",
+      "tool": "Công cụ",
+      "used": "Đã dùng",
+      "left": "Còn lại",
+      "bar": "Tỷ lệ đã dùng",
+      "ofLimit": "{used} trên {limit}",
+      "fairness": "Một lượt chỉ được tính khi bạn nhận được kết quả. Nếu có lỗi, lượt đó không bị tính. Yêu cầu lại đúng điều cũ trong vòng một ngày sẽ dùng lại kết quả trước đó miễn phí."
+    },
+    "unavailable": "Hiện không xem được mức dùng. Vui lòng thử lại sau.",
+    "plan": {
+      "heading": "Gói của bạn",
+      "channels": "Kênh đã kết nối",
+      "projects": "Dự án đang hoạt động",
+      "ofLimit": "{used} trên {limit}"
+    },
+    "youtube": {
+      "heading": "Dữ liệu YouTube",
+      "body": "Video và số liệu của bạn được cập nhật tự động. Google giới hạn lượng dữ liệu mỗi ứng dụng được đọc mỗi ngày. Nếu chạm giới hạn, việc cập nhật sẽ tạm dừng và tiếp tục sau nửa đêm giờ Thái Bình Dương. Không có gì bị mất.",
+      "delay": "YouTube công bố số liệu phân tích trễ hai đến ba ngày, nên những ngày gần nhất luôn được đánh dấu là chưa chính thức."
+    },
+    "settingsLink": "Cài đặt"
+  }
+}
