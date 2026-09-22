@@ -58,6 +58,14 @@ const base = z.object({
    */
   AI_PROVIDER: z.enum(['openai', 'disabled']).default('openai'),
   OPENAI_API_KEY: z.string().min(1).optional(),
+
+  /**
+   * TEST ONLY. The origin of a local fake that stands in for Google sign-in,
+   * Google OAuth, the YouTube APIs and OpenAI in the end-to-end suite
+   * (tests/e2e/fake-apis). Refused unless APP_URL is localhost, so a real
+   * deployment cannot be pointed at it.
+   */
+  FAKE_EXTERNAL_APIS_URL: z.string().url().optional(),
   /** High-volume, short outputs: ideas, titles, descriptions. */
   AI_MODEL_FAST: z.string().min(1).default('gpt-5.6-luna'),
   /** Long-form reasoning: scripts and content plans. */
@@ -119,6 +127,20 @@ const schema = base.superRefine((env, ctx) => {
     }
   }
 
+  if (env.FAKE_EXTERNAL_APIS_URL) {
+    const host = new URL(env.APP_URL).hostname;
+    const fakeHost = new URL(env.FAKE_EXTERNAL_APIS_URL).hostname;
+    const local = (h: string) => h === 'localhost' || h === '127.0.0.1';
+    if (!local(host) || !local(fakeHost)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['FAKE_EXTERNAL_APIS_URL'],
+        message:
+          'FAKE_EXTERNAL_APIS_URL is for local end-to-end tests only (APP_URL and the fake must be localhost)',
+      });
+    }
+  }
+
   // Outside production a missing key is allowed: the AI features report
   // CONFIGURATION_MISSING instead of the app refusing to start.
 });
@@ -155,6 +177,20 @@ export const env: Env = parseEnv(process.env);
 // process.env, so the bridge lives here.
 process.env.AUTH_URL ??= `${env.APP_URL}/api/auth`;
 
+function externalEndpoints(fake: string | undefined) {
+  const at = (real: string, path: string) => (fake ? `${fake.replace(/\/$/, '')}${path}` : real);
+  return {
+    /** Auth.js discovers the sign-in endpoints from this issuer. */
+    googleSignInIssuer: fake ? fake.replace(/\/$/, '') : undefined,
+    googleAuthorize: at('https://accounts.google.com/o/oauth2/v2/auth', '/o/oauth2/v2/auth'),
+    googleToken: at('https://oauth2.googleapis.com/token', '/token'),
+    googleRevoke: at('https://oauth2.googleapis.com/revoke', '/revoke'),
+    youtubeData: at('https://www.googleapis.com/youtube/v3', '/youtube/v3'),
+    youtubeAnalytics: at('https://youtubeanalytics.googleapis.com/v2/reports', '/v2/reports'),
+    openaiResponses: at('https://api.openai.com/v1/responses', '/v1/responses'),
+  };
+}
+
 /** Derived values, computed once so call sites never re-implement them. */
 export const config = {
   isProduction: env.NODE_ENV === 'production',
@@ -164,4 +200,6 @@ export const config = {
     env.YOUTUBE_OAUTH_REDIRECT_URI ?? `${env.APP_URL}/api/youtube/oauth/callback`,
   /** Migrations must not run through a transaction-mode pooler. */
   migrationDatabaseUrl: env.DIRECT_DATABASE_URL ?? env.DATABASE_URL,
+  /** Every external endpoint, in one place; see FAKE_EXTERNAL_APIS_URL. */
+  external: externalEndpoints(env.FAKE_EXTERNAL_APIS_URL),
 } as const;

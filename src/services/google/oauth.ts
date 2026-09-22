@@ -18,9 +18,9 @@ import { describeShape, errorReason, googleRequest } from './http';
  * docs/architecture/05-authentication-architecture.md §5.3–5.4
  */
 
-export const GOOGLE_AUTHORIZE_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
-export const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-export const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
+export const GOOGLE_AUTHORIZE_URL = config.external.googleAuthorize;
+export const GOOGLE_TOKEN_URL = config.external.googleToken;
+export const GOOGLE_REVOKE_URL = config.external.googleRevoke;
 const GOOGLE_ISSUERS = ['https://accounts.google.com', 'accounts.google.com'];
 
 function credentials(): { clientId: string; clientSecret: string } {

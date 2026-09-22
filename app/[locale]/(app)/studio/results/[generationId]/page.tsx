@@ -10,6 +10,7 @@ import {
   ScriptOutput,
   TitlesOutput,
 } from '@/domain/ai/types';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { localePath } from '@/lib/i18n/paths';
@@ -55,6 +56,8 @@ export default async function ResultPage({
   async function save(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, `/studio/results/${generationId}?error=1`));
     await saveIdea({
       userId: current.id,
       generationId,
@@ -66,6 +69,8 @@ export default async function ResultPage({
   async function addToProject(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, `/studio/results/${generationId}?error=1`));
     const projectId = String(formData.get('projectId') ?? '');
     const pick = Number(formData.get('pick') ?? 0);
     const base = localePath(locale, `/studio/results/${generationId}`);
@@ -122,7 +127,11 @@ export default async function ResultPage({
         )}
       </header>
 
-      {cached && <p className="flash flash--ok">{t('cached')}</p>}
+      {cached && (
+        <p className="flash flash--ok" role="status">
+          {t('cached')}
+        </p>
+      )}
       {targetProject && (added || already) && (
         <p className="flash flash--ok" role="status">
           {t(added ? 'toProject.added' : 'toProject.alreadyAdded', {

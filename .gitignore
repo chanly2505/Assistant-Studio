@@ -48,3 +48,6 @@ prisma/*.db-journal
 
 # Playwright sign-in state (a live session cookie)
 tests/e2e/.auth/
+
+# Local database backups (contain personal data and encrypted tokens)
+backups/

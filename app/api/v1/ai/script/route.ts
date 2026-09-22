@@ -10,6 +10,5 @@ export const maxDuration = 120;
 export const POST = aiRoute({
   slug: 'script',
   body: ScriptRequest,
-  perMinute: 3,
   run: (userId, body, log) => generateScript({ userId, log }, body),
 });

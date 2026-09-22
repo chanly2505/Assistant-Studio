@@ -10,6 +10,5 @@ export const maxDuration = 120;
 export const POST = aiRoute({
   slug: 'ideas',
   body: IdeasRequest,
-  perMinute: 10,
   run: (userId, body, log) => generateIdeas({ userId, log }, body),
 });

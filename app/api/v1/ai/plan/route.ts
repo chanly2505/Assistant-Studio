@@ -10,6 +10,5 @@ export const maxDuration = 120;
 export const POST = aiRoute({
   slug: 'plan',
   body: PlanRequest,
-  perMinute: 3,
   run: (userId, body, log) => generatePlan({ userId, log }, body),
 });

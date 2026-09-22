@@ -33,6 +33,9 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:backup": "tsx scripts/backup.mts backup",
+    "db:restore-check": "tsx scripts/backup.mts restore-check",
+    "db:rehearse-restore": "tsx scripts/backup.mts rehearse",
     "verify": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "prisma": {
@@ -53,6 +56,7 @@
     "zod": "3.24.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "9.18.0",
     "@playwright/test": "1.63.0",

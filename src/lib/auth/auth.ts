@@ -30,6 +30,9 @@ export const isGoogleSignInConfigured = Boolean(
 export const googleProvider = Google({
   clientId: env.GOOGLE_CLIENT_ID ?? 'not-configured',
   clientSecret: env.GOOGLE_CLIENT_SECRET ?? 'not-configured',
+  // End-to-end tests only: sign-in goes to the local fake OIDC provider,
+  // which Auth.js discovers from this issuer. Unset everywhere else.
+  ...(config.external.googleSignInIssuer ? { issuer: config.external.googleSignInIssuer } : {}),
   authorization: {
     params: {
       scope: LOGIN_SCOPES.join(' '),

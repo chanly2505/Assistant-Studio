@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
 import { Field } from '@/components/forms/field';
 import { SubmitButton } from '@/components/forms/submit-button';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
 import { UpdateChannelSettingsRequest } from '@/modules/settings/inputs';
@@ -39,6 +40,7 @@ export default async function ChannelSettingsPage({
   async function save(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     // No helper function in here: Next 15.1's server-action compiler loses the
     // page's variables (locale, channelId) when an action defines a nested
     // function, and the action then fails with "locale is not defined".

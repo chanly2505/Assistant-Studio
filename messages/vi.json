@@ -36,8 +36,10 @@
       "Configuration": "Đăng nhập bị cấu hình sai trên máy chủ. Vui lòng thử lại sau.",
       "OAuthAccountNotLinked": "Email này đã được liên kết với một phương thức đăng nhập khác.",
       "Verification": "Liên kết đăng nhập đó đã hết hạn. Vui lòng thử lại.",
+      "TooManyAttempts": "Đăng nhập quá nhiều lần. Vui lòng đợi 15 phút rồi thử lại.",
       "Default": "Chúng tôi không thể đăng nhập cho bạn. Vui lòng thử lại."
-    }
+    },
+    "deleted": "Tài khoản của bạn đã bị xóa. Cảm ơn bạn đã dùng thử YouTube Studio Assistant."
   },
   "channels": {
     "title": "Kênh của bạn",
@@ -147,6 +149,10 @@
     },
     "settings": {
       "languageUnavailable": "Ngôn ngữ đó chưa có sẵn."
+    },
+    "tooManyActions": "Bạn thao tác quá thường xuyên. Vui lòng đợi một phút rồi thử lại.",
+    "account": {
+      "confirmMismatch": "Địa chỉ email bạn nhập không khớp với tài khoản."
     }
   },
   "common": {
@@ -549,7 +555,17 @@
       "connect": "Hãy kết nối một kênh YouTube trước",
       "edit": "Mô tả “{channel}”"
     },
-    "usageLink": "Xem những gì bạn đã dùng trong tháng này"
+    "usageLink": "Xem những gì bạn đã dùng trong tháng này",
+    "data": {
+      "heading": "Dữ liệu của bạn",
+      "exportIntro": "Tải xuống mọi thứ ứng dụng này lưu về bạn trong một tệp (JSON). Mật khẩu và khóa truy cập không bao giờ được đưa vào.",
+      "export": "Tải dữ liệu của tôi",
+      "deleteHeading": "Xóa tài khoản của bạn",
+      "deleteIntro": "Thao tác này xóa vĩnh viễn tài khoản của bạn: ý tưởng, dự án, lịch, lịch sử AI và dữ liệu YouTube chúng tôi đã sao chép. Chúng tôi cũng thu hồi quyền của ứng dụng này với các kênh YouTube của bạn tại Google. Không thể hoàn tác.",
+      "confirmLabel": "Nhập địa chỉ email của bạn ({email}) để xác nhận",
+      "delete": "Xóa vĩnh viễn tài khoản của tôi",
+      "deleting": "Đang xóa…"
+    }
   },
   "channelSettings": {
     "back": "Cài đặt",

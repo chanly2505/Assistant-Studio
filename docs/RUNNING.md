@@ -187,7 +187,8 @@ The database and Redis must be running (`pnpm db:start && pnpm redis:start`).
 | `pnpm test` | tests only (they use a separate `_test` database, so your data is safe) |
 | `pnpm db:studio` | browse the database in your browser |
 | `pnpm build` | production build check (stop `pnpm dev` first: they share the `.next` folder) |
-| `pnpm test:e2e` | browser tests in your installed Chrome. Uses its own port (3100), build folder and database, so `pnpm dev` can keep running |
+| `pnpm test:e2e` | browser tests in your installed Chrome. Builds a production copy and runs it with local fakes of Google and OpenAI (nothing real is contacted, except that YouTube thumbnails are fetched and show 404 warnings). Uses its own port (3100), build folder and database, so `pnpm dev` can keep running. Takes about 2 minutes. |
+| `pnpm db:rehearse-restore` | backs up your local database and proves the backup restores, table by table |
 
 ---
 

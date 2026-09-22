@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
 import { toAppError } from '@/domain/errors/app-error';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { flashCodeFor, localePath } from '@/lib/i18n/paths';
@@ -46,6 +47,8 @@ export default async function ChannelsPage({
   async function disconnect(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, '/channels?error=RATE_LIMITED'));
     const channelId = String(formData.get('channelId') ?? '');
     const outcome = await disconnectChannel({ userId: current.id, channelId });
 
@@ -56,6 +59,8 @@ export default async function ChannelsPage({
   async function refresh(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, '/channels?error=RATE_LIMITED'));
     const channelId = String(formData.get('channelId') ?? '');
     let target: string;
     try {

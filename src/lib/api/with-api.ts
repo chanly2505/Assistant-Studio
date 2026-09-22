@@ -53,7 +53,12 @@ export interface WithApiOptions<
   body?: TBodySchema;
   query?: TQuerySchema;
   params?: TParamsSchema;
-  rateLimit?: RateLimitRule;
+  /**
+   * Omitted → the default for the method (DEFAULT_READ_LIMIT or
+   * DEFAULT_WRITE_LIMIT), so no route is ever unlimited by accident.
+   * `false` is the explicit, reviewable opt-out.
+   */
+  rateLimit?: RateLimitRule | false;
   /** Audit action name, written by the use case. Recorded on the access log. */
   audit?: string;
   /** Success status when the handler returns data. Defaults to 200. */
@@ -65,6 +70,24 @@ export interface WithApiOptions<
    */
   errorRedirect?: (error: AppError, user: SessionUser | null) => string;
 }
+
+/**
+ * Every route is rate limited. docs/architecture/08 §8.5: reads 120/min/user.
+ * Both fail OPEN: they cost nothing, so availability wins if Redis is down.
+ * Routes that cost money (AI) set their own fail-CLOSED rule.
+ */
+export const DEFAULT_READ_LIMIT: RateLimitRule = {
+  key: 'api:read',
+  points: 120,
+  windowSec: 60,
+  onStoreFailure: 'open',
+};
+export const DEFAULT_WRITE_LIMIT: RateLimitRule = {
+  key: 'api:write',
+  points: 60,
+  windowSec: 60,
+  onStoreFailure: 'open',
+};
 
 /** Methods that change state and therefore need CSRF protection. */
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -127,13 +150,18 @@ export function withApi<
       }
 
       /* 2. Rate limiting --------------------------------------------------- */
-      if (options.rateLimit) {
+      const rule =
+        options.rateLimit === false
+          ? null
+          : (options.rateLimit ??
+            (UNSAFE_METHODS.has(request.method) ? DEFAULT_WRITE_LIMIT : DEFAULT_READ_LIMIT));
+      if (rule) {
         const identity = user ? `user:${user.id}` : clientIdentity(request);
         let result;
         try {
-          result = await getRateLimiter().consume(options.rateLimit, identity);
+          result = await getRateLimiter().consume(rule, identity);
         } catch (storeError) {
-          const mode = options.rateLimit.onStoreFailure ?? 'closed';
+          const mode = rule.onStoreFailure ?? 'closed';
           log.error({ err: storeError }, 'rate limiter unavailable');
           if (mode === 'closed') {
             throw new AppError('UPSTREAM_UNAVAILABLE', {

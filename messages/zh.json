@@ -36,8 +36,10 @@
       "Configuration": "服务器上的登录配置有误，请稍后再试。",
       "OAuthAccountNotLinked": "此邮箱已关联其他登录方式。",
       "Verification": "该登录链接已过期，请重试。",
+      "TooManyAttempts": "登录尝试次数过多，请等 15 分钟后再试。",
       "Default": "无法为你登录，请重试。"
-    }
+    },
+    "deleted": "你的账号已删除。感谢你试用 YouTube Studio Assistant。"
   },
   "channels": {
     "title": "你的频道",
@@ -147,6 +149,10 @@
     },
     "settings": {
       "languageUnavailable": "该语言暂不可用。"
+    },
+    "tooManyActions": "操作过于频繁，请稍等一分钟后再试。",
+    "account": {
+      "confirmMismatch": "你输入的邮箱地址与账号不符。"
     }
   },
   "common": {
@@ -549,7 +555,17 @@
       "connect": "请先连接一个 YouTube 频道",
       "edit": "描述“{channel}”"
     },
-    "usageLink": "查看本月用量"
+    "usageLink": "查看本月用量",
+    "data": {
+      "heading": "你的数据",
+      "exportIntro": "将此应用存储的关于你的所有内容下载为一个文件（JSON）。其中绝不包含密码或访问密钥。",
+      "export": "下载我的数据",
+      "deleteHeading": "删除你的账号",
+      "deleteIntro": "这将永久删除你的账号：你的创意、项目、日历、AI 历史以及我们复制的 YouTube 数据。我们还会在 Google 撤销本应用对你 YouTube 频道的访问权限。此操作无法撤销。",
+      "confirmLabel": "输入你的邮箱地址（{email}）以确认",
+      "delete": "永久删除我的账号",
+      "deleting": "正在删除…"
+    }
   },
   "channelSettings": {
     "back": "设置",

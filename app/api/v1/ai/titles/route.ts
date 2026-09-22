@@ -10,6 +10,5 @@ export const maxDuration = 120;
 export const POST = aiRoute({
   slug: 'titles',
   body: TitlesRequest,
-  perMinute: 10,
   run: (userId, body, log) => generateTitles({ userId, log }, body),
 });

@@ -7,13 +7,14 @@ import { defineConfig } from '@playwright/test';
  * End-to-end tests in a real browser: the installed Google Chrome, so nothing
  * is downloaded. docs/architecture/09-testing-strategy.md
  *
- * The app runs on its own port, build folder and database, so this can run
- * beside `pnpm dev` without either disturbing the other:
+ * The app is a production build (next build + next start) on its own port,
+ * build folder and database, so this can run beside `pnpm dev`:
  *   port 3100 · .next-e2e · studio_assistant_e2e
  *
- * Secrets come from .env.test, whose Google and OpenAI keys are fakes. AI is
- * switched off, and no test signs in through Google: a session is created
- * directly in the database (tests/e2e/global-setup.ts).
+ * Secrets come from .env.test, whose Google and OpenAI keys are fakes, and
+ * every external API is the local fake in tests/e2e/fake-apis — including
+ * Google sign-in, which the journeys go through for real. Most specs skip it
+ * with a session created directly in the database (global-setup.ts).
  */
 
 export const E2E_PORT = 3100;
@@ -31,6 +32,30 @@ function testEnv(): Record<string, string> {
 
 const env = testEnv();
 
+export const E2E_REDIS_URL = env.REDIS_URL ?? 'redis://127.0.0.1:6379/0';
+export const FAKE_APIS_PORT = 3199;
+export const FAKE_APIS_URL = `http://localhost:${FAKE_APIS_PORT}`;
+
+/** The app's environment: .env.test's fake secrets, pointed at the fakes. */
+const appEnv: Record<string, string> = {
+  APP_URL: `http://localhost:${E2E_PORT}`,
+  DATABASE_URL: E2E_DATABASE_URL,
+  NEXT_DIST_DIR: '.next-e2e',
+  NEXT_TSCONFIG_PATH: 'tsconfig.e2e.json',
+  NEXT_TELEMETRY_DISABLED: '1',
+  PREVIEW_LOCALES: 'km,th,vi,zh',
+  FAKE_EXTERNAL_APIS_URL: FAKE_APIS_URL,
+  AI_PROVIDER: 'openai',
+  OPENAI_API_KEY: 'sk-fake-e2e-only',
+  LOG_LEVEL: 'warn',
+  AUTH_SECRET: env.AUTH_SECRET ?? '',
+  TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY ?? '',
+  GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID ?? '',
+  GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET ?? '',
+  REDIS_URL: E2E_REDIS_URL,
+  REDIS_KEY_PREFIX: 'ysa-e2e',
+};
+
 export default defineConfig({
   testDir: './tests/e2e',
   globalSetup: './tests/e2e/global-setup.ts',
@@ -46,28 +71,37 @@ export default defineConfig({
     headless: true,
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: `pnpm exec next dev -p ${E2E_PORT}`,
-    url: `http://localhost:${E2E_PORT}/en/sign-in`,
-    timeout: 180_000,
-    reuseExistingServer: false,
-    stdout: 'ignore',
-    stderr: 'pipe',
-    env: {
-      APP_URL: `http://localhost:${E2E_PORT}`,
-      DATABASE_URL: E2E_DATABASE_URL,
-      NEXT_DIST_DIR: '.next-e2e',
-      NEXT_TSCONFIG_PATH: 'tsconfig.e2e.json',
-      NEXT_TELEMETRY_DISABLED: '1',
-      PREVIEW_LOCALES: 'km,th,vi,zh',
-      AI_PROVIDER: 'disabled',
-      LOG_LEVEL: 'warn',
-      AUTH_SECRET: env.AUTH_SECRET ?? '',
-      TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY ?? '',
-      GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID ?? '',
-      GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET ?? '',
-      REDIS_URL: env.REDIS_URL ?? 'redis://127.0.0.1:6379/0',
-      REDIS_KEY_PREFIX: 'ysa-e2e',
+  webServer: [
+    {
+      // Google (sign-in, OAuth, YouTube APIs) and OpenAI, faked locally.
+      command: `pnpm exec tsx tests/e2e/fake-apis/server.ts`,
+      url: `${FAKE_APIS_URL}/__state`,
+      timeout: 30_000,
+      reuseExistingServer: false,
+      stdout: 'ignore',
+      stderr: 'pipe',
+      env: { FAKE_APIS_PORT: String(FAKE_APIS_PORT) },
     },
-  },
+    {
+      // A PRODUCTION build: the real CSP (no eval, no inline styles), static-
+      // vs-dynamic rendering and production cookies are what this suite checks.
+      command: `pnpm exec next build && pnpm exec next start -p ${E2E_PORT}`,
+      url: `http://localhost:${E2E_PORT}/en/sign-in`,
+      timeout: 420_000,
+      reuseExistingServer: false,
+      stdout: 'ignore',
+      stderr: 'pipe',
+      env: appEnv,
+    },
+    {
+      // The background worker, so a connected channel really backfills.
+      command: 'pnpm exec tsx --conditions=react-server src/worker/index.ts',
+      wait: { stdout: /worker ready/ },
+      timeout: 60_000,
+      reuseExistingServer: false,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: { ...appEnv, NODE_ENV: 'production', LOG_LEVEL: 'info' },
+    },
+  ],
 });

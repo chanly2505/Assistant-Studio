@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Field } from '@/components/forms/field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
 import { createIdea, deleteIdea, listIdeas, setIdeaStatus } from '@/modules/content/ideas';
@@ -38,6 +39,8 @@ export default async function IdeasPage({
   async function add(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, '/ideas?error=errors.tooManyActions'));
     const parsed = CreateIdeaRequest.safeParse({
       title: formData.get('title'),
       angle: formData.get('angle') || undefined,
@@ -53,6 +56,8 @@ export default async function IdeasPage({
   async function act(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, '/ideas?error=errors.tooManyActions'));
     const ideaId = String(formData.get('ideaId') ?? '');
     const action = String(formData.get('action') ?? '');
     const back = localePath(locale, `/ideas?tab=${tab}`);

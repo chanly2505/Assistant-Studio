@@ -4,12 +4,16 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { PrismaClient } from '@prisma/client';
+import { Queue } from 'bullmq';
 import { Client } from 'pg';
 
-import { E2E_DATABASE_URL, E2E_PORT } from '../../playwright.config';
+import { E2E_DATABASE_URL, E2E_PORT, E2E_REDIS_URL } from '../../playwright.config';
 
 export const AUTH_STATE = resolve(__dirname, '.auth/state.json');
+/** A second user for the load test, so its counters are its own. */
+export const LOAD_AUTH_STATE = resolve(__dirname, '.auth/load-state.json');
 export const E2E_USER_EMAIL = 'e2e@example.test';
+export const SESSION_COOKIE = '__Host-ysa.session';
 
 /**
  * A clean, migrated e2e database with one signed-in user.
@@ -35,6 +39,14 @@ export default async function globalSetup() {
     env: { ...process.env, DATABASE_URL: E2E_DATABASE_URL },
     stdio: 'ignore',
   });
+
+  // Jobs left in the queue by an earlier run point at rows that no longer exist.
+  const queue = new Queue('youtube-sync', {
+    connection: { url: E2E_REDIS_URL },
+    prefix: 'ysa-e2e',
+  });
+  await queue.obliterate({ force: true });
+  await queue.close();
 
   const prisma = new PrismaClient({ datasourceUrl: E2E_DATABASE_URL });
   try {
@@ -78,30 +90,42 @@ export default async function globalSetup() {
       },
     });
 
+    mkdirSync(resolve(__dirname, '.auth'), { recursive: true });
+    await signIn(prisma, user.id, AUTH_STATE);
+    const loadUser = await prisma.user.create({
+      data: { email: 'e2e-load@example.test', name: 'E2E load', settings: { create: {} } },
+    });
+    await signIn(prisma, loadUser.id, LOAD_AUTH_STATE);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/** A database session for the user, saved as Playwright storage state. */
+async function signIn(prisma: PrismaClient, userId: string, statePath: string) {
+  {
     const token = randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 2 * 3_600_000);
-    await prisma.session.create({ data: { sessionToken: token, userId: user.id, expires } });
-
-    mkdirSync(resolve(__dirname, '.auth'), { recursive: true });
+    await prisma.session.create({ data: { sessionToken: token, userId, expires } });
     writeFileSync(
-      AUTH_STATE,
+      statePath,
       JSON.stringify({
         cookies: [
           {
-            name: 'ysa.session',
+            // Production cookie name: __Host- requires Secure, Path=/ and no
+            // Domain attribute. Chrome treats http://localhost as secure.
+            name: SESSION_COOKIE,
             value: token,
             domain: 'localhost',
             path: '/',
             expires: Math.floor(expires.getTime() / 1000),
             httpOnly: true,
-            secure: false,
+            secure: true,
             sameSite: 'Lax',
           },
         ],
         origins: [{ origin: `http://localhost:${E2E_PORT}`, localStorage: [] }],
       }),
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -8,6 +8,7 @@ import { TimeZonePrompt } from '@/components/forms/time-zone-prompt';
 import type { ProjectStatus } from '@/domain/content/status';
 import { localDateKey, monthGrid, monthKey, parseMonth, shiftMonth } from '@/domain/content/time';
 import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
 import {
@@ -79,6 +80,7 @@ export default async function CalendarPage({
   async function add(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`))) redirect(`${self}&error=errors.tooManyActions`);
     const date = String(formData.get('date') ?? '');
     const at = String(formData.get('time') ?? '');
     const parsed = CreateCalendarEntryRequest.safeParse({
@@ -97,6 +99,7 @@ export default async function CalendarPage({
   async function act(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`))) redirect(`${self}&error=errors.tooManyActions`);
     const entryId = String(formData.get('entryId') ?? '');
     const action = String(formData.get('action') ?? '');
     const outcome =
@@ -111,6 +114,7 @@ export default async function CalendarPage({
   async function useZone(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`))) redirect(`${self}&error=errors.tooManyActions`);
     const saved = await setTimeZone(me.id, String(formData.get('timezone') ?? ''));
     redirect(saved.ok ? self : `${self}&error=${saved.error.messageKey}`);
   }

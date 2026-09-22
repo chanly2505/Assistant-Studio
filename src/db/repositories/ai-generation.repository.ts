@@ -2,27 +2,64 @@ import type { AIFeature, AIGenerationStatus, Prisma } from '@prisma/client';
 
 import { prisma } from '@/db/prisma';
 
+/** Arbitrary but fixed: serialises spend reservations across all instances. */
+const SPEND_LOCK_KEY = 7_110_427_001n;
+
+export interface PendingGeneration {
+  userId: string;
+  channelId: string | null;
+  feature: AIFeature;
+  provider: string;
+  model: string;
+  promptVersion: string;
+  locale: string;
+  inputHash: string;
+  inputJson: Prisma.InputJsonValue;
+}
+
 /**
  * The generation record. Created PENDING *before* the provider call and
  * finalised after, so spend is recorded even if the request dies mid-flight.
  */
 export const aiGenerationRepository = {
-  async createPending(input: {
-    userId: string;
-    channelId: string | null;
-    feature: AIFeature;
-    provider: string;
-    model: string;
-    promptVersion: string;
-    locale: string;
-    inputHash: string;
-    inputJson: Prisma.InputJsonValue;
-  }): Promise<string> {
+  async createPending(input: PendingGeneration): Promise<string> {
     const row = await prisma.aIGeneration.create({
       data: { ...input, status: 'PENDING' },
       select: { id: true },
     });
     return row.id;
+  },
+
+  /**
+   * The spend breaker, made atomic. Creates the PENDING record with its
+   * WORST-CASE cost already counted, but only if that still fits under the
+   * day's cap — or returns null.
+   *
+   * Check-then-spend would overshoot: in-flight calls record nothing until
+   * they finish, so a burst of simultaneous requests would all see the same
+   * "spent so far" and all go ahead. A transaction-scoped advisory lock makes
+   * the check and the reservation one step; finalize() later replaces the
+   * reservation with the real cost. The lock is held for two queries.
+   */
+  async createPendingWithinBudget(
+    input: PendingGeneration,
+    budget: { since: Date; limitMicros: number; reserveMicros: number },
+  ): Promise<string | null> {
+    return prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${SPEND_LOCK_KEY})`;
+      const spent = await tx.aIGeneration.aggregate({
+        where: { createdAt: { gte: budget.since } },
+        _sum: { costMicros: true },
+      });
+      if (Number(spent._sum.costMicros ?? 0n) + budget.reserveMicros > budget.limitMicros) {
+        return null;
+      }
+      const row = await tx.aIGeneration.create({
+        data: { ...input, status: 'PENDING', costMicros: BigInt(budget.reserveMicros) },
+        select: { id: true },
+      });
+      return row.id;
+    });
   },
 
   async finalize(

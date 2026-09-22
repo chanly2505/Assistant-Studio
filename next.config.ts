@@ -4,12 +4,11 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./src/lib/i18n/request.ts');
 
 /**
- * Security headers applied to every response.
+ * Security headers applied to every response. docs/architecture/08 §8.3
  *
- * CSP is intentionally strict. `unsafe-inline` for styles is the one concession
- * Next.js currently needs; scripts use a nonce-free strict-dynamic-less policy in
- * development and are tightened in production. Any addition here needs a comment
- * explaining why.
+ * The HTML Content-Security-Policy is NOT here: it carries a per-request nonce,
+ * so middleware.ts builds it (src/lib/security/csp.ts). API routes, which the
+ * middleware skips, get a fixed deny-everything policy below.
  */
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -23,6 +22,15 @@ const securityHeaders = [
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
   },
+  // Our pages never need to be opened by, or embedded in, another origin.
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+  { key: 'X-DNS-Prefetch-Control', value: 'off' },
+];
+
+/** JSON has nothing to load or frame. Mirrors API_CSP in src/lib/security/csp.ts. */
+const apiHeaders = [
+  { key: 'Content-Security-Policy', value: "default-src 'none'; frame-ancestors 'none'" },
 ];
 
 /**
@@ -41,7 +49,14 @@ const nextConfig: NextConfig = {
   // without the two overwriting each other's chunks.
   distDir: process.env.NEXT_DIST_DIR || '.next',
 
-  env: { NEXT_PUBLIC_PREVIEW_LOCALES: previewLocales },
+  env: {
+    NEXT_PUBLIC_PREVIEW_LOCALES: previewLocales,
+    // End-to-end builds only: the fake Google's origin, so the CSP lets the
+    // sign-in and connect forms redirect to it. Empty in every other build.
+    NEXT_PUBLIC_FAKE_EXTERNAL_ORIGIN: process.env.FAKE_EXTERNAL_APIS_URL
+      ? new URL(process.env.FAKE_EXTERNAL_APIS_URL).origin
+      : '',
+  },
 
   // pino runs its transports in a worker thread that it locates by file path.
   // Bundling it breaks that path ("Cannot find module …/lib/worker.js") and the
@@ -65,7 +80,10 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      { source: '/api/:path*', headers: apiHeaders },
+    ];
   },
 };
 
