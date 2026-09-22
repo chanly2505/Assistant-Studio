@@ -11,7 +11,8 @@
     "calendar": "Calendar",
     "settings": "Settings",
     "signOut": "Sign out",
-    "signedInAs": "Signed in as {email}"
+    "signedInAs": "Signed in as {email}",
+    "ideas": "Ideas"
   },
   "home": {
     "status": "System status",
@@ -128,6 +129,17 @@
       "custom": "This value isn't valid.",
       "contentType": "Expected JSON.",
       "invalidJson": "The request body isn't valid JSON."
+    },
+    "content": {
+      "needsScheduleDate": "Set a date and time before marking this as scheduled.",
+      "ideaPromoted": "This idea is already a project, so it stays with the project.",
+      "tooManyProjects": "You've reached the maximum number of active projects. Archive some to add more.",
+      "tooManyVersions": "This has reached the maximum number of versions. Start a new project or keep editing the selected one.",
+      "assetTooLong": "That text is longer than allowed for this kind of asset.",
+      "generationFailed": "That AI result didn't complete, so there's nothing to add.",
+      "notAnAsset": "This kind of AI result can't be added to a project.",
+      "compareSameKind": "Only versions of the same kind can be compared.",
+      "badTimeZone": "That time zone isn't recognised."
     }
   },
   "common": {
@@ -254,7 +266,9 @@
       "VALIDATION_FAILED": "Please check the form — something is missing or too long.",
       "NOT_FOUND": "That channel isn't available.",
       "generic": "Something went wrong. Please try again."
-    }
+    },
+    "forProject": "Working on “{title}”. On the result page you can add what you generate to this project.",
+    "backToProject": "Back to the project"
   },
   "results": {
     "back": "Back to Studio",
@@ -307,6 +321,199 @@
       "titleCol": "Video",
       "format": "Format",
       "goal": "Purpose"
+    },
+    "toProject": {
+      "heading": "Add to a project",
+      "choose": "Project",
+      "submit": "Add to project",
+      "submitting": "Adding…",
+      "pickTitle": "Add this title",
+      "none": "Create a project first to collect results in it.",
+      "create": "Go to projects",
+      "added": "Added to “{project}” as version {version}.",
+      "alreadyAdded": "Already in “{project}” (version {version}).",
+      "open": "Open project",
+      "target": "Anything you add goes to “{project}”."
     }
+  },
+  "content": {
+    "statuses": {
+      "IDEA": "Idea",
+      "SCRIPTING": "Scripting",
+      "FILMING": "Filming",
+      "EDITING": "Editing",
+      "SCHEDULED": "Scheduled",
+      "PUBLISHED": "Published",
+      "ARCHIVED": "Archived"
+    },
+    "kinds": {
+      "TITLE": "Title",
+      "DESCRIPTION": "Description",
+      "SCRIPT": "Script",
+      "TAGS": "Tags",
+      "THUMBNAIL_BRIEF": "Thumbnail brief",
+      "CHAPTERS": "Chapters"
+    },
+    "sources": {
+      "AI": "AI",
+      "USER": "You"
+    },
+    "timeZone": {
+      "shownIn": "Times are in {zone}.",
+      "use": "Use {zone} instead"
+    },
+    "saved": "Saved."
+  },
+  "ideas": {
+    "title": "Ideas",
+    "subtitle": "Ideas you saved from Studio or wrote yourself. Start a project when one is worth making.",
+    "tabs": {
+      "SAVED": "Saved",
+      "PROMOTED": "In projects",
+      "ARCHIVED": "Archived"
+    },
+    "add": {
+      "heading": "Add an idea",
+      "title": "Idea",
+      "angle": "Angle",
+      "hook": "Opening hook",
+      "keywords": "Keywords",
+      "keywordsHint": "Separate with commas.",
+      "submit": "Save idea",
+      "submitting": "Saving…"
+    },
+    "empty": "No ideas here yet.",
+    "emptyHint": "Generate some in Studio, or add one above.",
+    "studioLink": "Generate ideas in Studio",
+    "fromAi": "From AI",
+    "yours": "Yours",
+    "startProject": "Start project",
+    "starting": "Starting…",
+    "openProject": "Open project",
+    "archive": "Archive",
+    "restore": "Restore",
+    "delete": "Delete"
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Every video you are working on, by stage.",
+    "new": {
+      "heading": "New project",
+      "title": "Working title",
+      "submit": "Create project",
+      "submitting": "Creating…"
+    },
+    "empty": "No projects yet. Start one here, or from an idea.",
+    "column": {
+      "empty": "Nothing here"
+    },
+    "scheduledFor": "Scheduled {date}",
+    "assets": "{count, plural, =0 {No versions yet} one {# version} other {# versions}}",
+    "archivedLink": "Archived projects ({count})",
+    "activeLink": "Back to the board",
+    "archivedTitle": "Archived projects",
+    "moveTo": "Move to",
+    "move": "Move",
+    "next": "Move to {status}"
+  },
+  "project": {
+    "back": "All projects",
+    "details": "Details",
+    "fields": {
+      "title": "Working title",
+      "notes": "Notes",
+      "scheduledFor": "Publish date and time",
+      "scheduledHint": "Leave empty if not decided yet.",
+      "channel": "Channel",
+      "noChannel": "No channel",
+      "language": "Language"
+    },
+    "save": "Save details",
+    "saving": "Saving…",
+    "status": {
+      "heading": "Status",
+      "current": "Now: {status}",
+      "moveTo": "Move to",
+      "note": "Note (optional)",
+      "move": "Move",
+      "moving": "Moving…",
+      "archive": "Archive project",
+      "restore": "Restore to {status}",
+      "published": "Published {date}"
+    },
+    "history": {
+      "heading": "History",
+      "created": "Created as {status}",
+      "moved": "{from} → {to}"
+    },
+    "assets": {
+      "heading": "Titles, description and script",
+      "intro": "Each change is kept as a new version. Select the one you will use.",
+      "none": "No versions yet.",
+      "version": "Version {version}",
+      "selected": "Selected",
+      "select": "Use this one",
+      "compare": "Compare with selected",
+      "by": "by {source}",
+      "characters": "{count} / {max} characters",
+      "add": "Add a version",
+      "kind": "Kind",
+      "body": "Text",
+      "addSubmit": "Save version",
+      "adding": "Saving…",
+      "generate": "Generate with AI",
+      "generateTitles": "Titles",
+      "generateDescription": "Description",
+      "generateScript": "Script"
+    },
+    "calendar": {
+      "heading": "On the calendar",
+      "none": "Nothing on the calendar for this project.",
+      "add": "Add a reminder"
+    },
+    "danger": {
+      "heading": "Delete project",
+      "body": "The project disappears from your board and calendar. Its ideas go back to your idea list.",
+      "submit": "Delete project"
+    }
+  },
+  "compare": {
+    "title": "Compare versions",
+    "back": "Back to the project",
+    "legend": "Lines only in version {before} are marked −, lines only in version {after} are marked +.",
+    "identical": "These two versions are identical."
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Scheduled videos and your own reminders.",
+    "previous": "Previous month",
+    "next": "Next month",
+    "thisMonth": "This month",
+    "empty": "Nothing scheduled this month.",
+    "listHeading": "This month",
+    "project": "Video",
+    "entryTypes": {
+      "REMINDER": "Reminder",
+      "TASK": "Task",
+      "NOTE": "Note"
+    },
+    "add": {
+      "heading": "Add to the calendar",
+      "title": "What",
+      "type": "Type",
+      "date": "Date",
+      "time": "Time",
+      "timeHint": "Leave empty for an all-day item.",
+      "notes": "Notes",
+      "project": "Project (optional)",
+      "noProject": "None",
+      "submit": "Add",
+      "submitting": "Adding…"
+    },
+    "allDay": "All day",
+    "done": "Mark done",
+    "undo": "Mark not done",
+    "delete": "Delete",
+    "statusDone": "Done"
   }
 }

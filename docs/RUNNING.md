@@ -139,6 +139,17 @@ openssl rand -base64 32
 5. **Studio (AI):** needs `OPENAI_API_KEY`, as described in section 4. Each user has a monthly
    allowance per tool. Asking the exact same thing again within 24 hours reuses the earlier result
    for free.
+6. **Ideas → Projects → Calendar:**
+   - **Ideas:** save ideas from Studio, or write your own. Click **Start project** to turn one into
+     a project.
+   - **Projects:** a board with one column per stage (Idea, Scripting, Filming, Editing, Scheduled,
+     Published). Open a project to set its publish date and move it between stages. Every move is
+     kept in its history.
+   - **Versions:** titles, descriptions and scripts are kept as numbered versions. Add your own,
+     or click **Generate with AI** and then **Add to project** on the result. Choose one version
+     with **Use this one**, and compare any two with **Compare with selected**.
+   - **Calendar:** shows scheduled projects and your own reminders. The first time, click
+     **Use … instead** so dates follow your time zone rather than UTC.
 
 ### Letting someone else sign in
 

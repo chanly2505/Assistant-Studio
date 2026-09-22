@@ -4,8 +4,9 @@ Helps creators plan, write and understand a YouTube channel.
 Architecture and constraints: [`docs/architecture/`](docs/architecture/README.md). Read
 [§12 Constraints & Limitations](docs/architecture/12-constraints-and-limitations.md) first.
 
-**Status:** Phases 1–6 are done: foundation, Google sign-in, YouTube channel connection,
-background sync of videos and statistics, analytics, and the AI Studio tools.
+**Status:** Phases 1–7 are done: foundation, Google sign-in, YouTube channel connection,
+background sync of videos and statistics, analytics, the AI Studio tools, and content management
+(ideas, projects with versioned titles/descriptions/scripts, status history, calendar).
 
 **Just want to run it?** Follow [`docs/RUNNING.md`](docs/RUNNING.md).
 

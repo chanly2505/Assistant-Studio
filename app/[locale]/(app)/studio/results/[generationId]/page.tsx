@@ -12,7 +12,10 @@ import {
 } from '@/domain/ai/types';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
+import { isAssetFeature } from '@/domain/content/assets';
 import { getGeneration, saveIdea } from '@/modules/ai/history';
+import { addAsset } from '@/modules/content/assets';
+import { listProjects } from '@/modules/content/projects';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +24,16 @@ export default async function ResultPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; generationId: string }>;
-  searchParams: Promise<{ cached?: string }>;
+  searchParams: Promise<{
+    cached?: string;
+    project?: string;
+    added?: string;
+    already?: string;
+    error?: string;
+  }>;
 }) {
   const { locale, generationId } = await params;
-  const { cached } = await searchParams;
+  const { cached, project: projectParam, added, already, error } = await searchParams;
   setRequestLocale(locale);
 
   const user = await requireUser(locale);
@@ -33,6 +42,10 @@ export default async function ResultPage({
   const generation = result.data;
 
   const t = await getTranslations('results');
+  const canAttach = generation.status === 'OK' && isAssetFeature(generation.feature);
+  const projects = canAttach ? await listProjects(user.id) : null;
+  const projectList = projects?.ok ? projects.data.projects : [];
+  const targetProject = projectList.find((p) => p.id === projectParam) ?? null;
   const ts = await getTranslations('studio');
   const savedTitles = new Set(generation.ideas.map((idea) => idea.title));
   const inputs = (generation.inputJson ?? {}) as Record<string, unknown>;
@@ -48,6 +61,47 @@ export default async function ResultPage({
     });
     redirect(localePath(locale, `/studio/results/${generationId}`));
   }
+
+  async function addToProject(formData: FormData) {
+    'use server';
+    const current = await requireUser(locale);
+    const projectId = String(formData.get('projectId') ?? '');
+    const pick = Number(formData.get('pick') ?? 0);
+    const base = localePath(locale, `/studio/results/${generationId}`);
+    const outcome = await addAsset(current.id, projectId, {
+      generationId,
+      pick: Number.isInteger(pick) && pick >= 0 && pick <= 9 ? pick : 0,
+    });
+    if (!outcome.ok) redirect(`${base}?project=${projectId}&error=1`);
+    redirect(
+      `${base}?project=${projectId}&${outcome.data.alreadyAdded ? 'already' : 'added'}=${outcome.data.version}`,
+    );
+  }
+
+  const attach = (pick: number, label: string) =>
+    canAttach && projectList.length > 0 ? (
+      <form action={addToProject} className="form form--inline">
+        <input type="hidden" name="pick" value={pick} />
+        {targetProject ? (
+          // Arrived from a project: no need to ask which one.
+          <input type="hidden" name="projectId" value={targetProject.id} />
+        ) : (
+          <>
+            <label className="visually-hidden" htmlFor={`project-${pick}`}>
+              {t('toProject.choose')}
+            </label>
+            <select id={`project-${pick}`} name="projectId" defaultValue={projectList[0]?.id}>
+              {projectList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+        <SubmitButton label={label} pendingLabel={t('toProject.submitting')} className="button" />
+      </form>
+    ) : null;
 
   return (
     <main className="page page--wide">
@@ -68,6 +122,31 @@ export default async function ResultPage({
       </header>
 
       {cached && <p className="flash flash--ok">{t('cached')}</p>}
+      {targetProject && (added || already) && (
+        <p className="flash flash--ok" role="status">
+          {t(added ? 'toProject.added' : 'toProject.alreadyAdded', {
+            project: targetProject.title,
+            version: Number(added ?? already),
+          })}{' '}
+          <Link href={localePath(locale, `/projects/${targetProject.id}#assets`)}>
+            {t('toProject.open')}
+          </Link>
+        </p>
+      )}
+      {error && (
+        <p className="flash flash--bad" role="alert">
+          {t('failed')}
+        </p>
+      )}
+      {canAttach && targetProject && !added && !already && (
+        <p className="muted small">{t('toProject.target', { project: targetProject.title })}</p>
+      )}
+      {canAttach && projectList.length === 0 && (
+        <p className="muted small">
+          {t('toProject.none')}{' '}
+          <Link href={localePath(locale, '/projects')}>{t('toProject.create')}</Link>
+        </p>
+      )}
 
       {generation.status !== 'OK' ? (
         <section className="card">
@@ -82,6 +161,7 @@ export default async function ResultPage({
           output={generation.outputJson}
           savedTitles={savedTitles}
           save={save}
+          attach={attach}
           t={t}
         />
       )}
@@ -98,12 +178,15 @@ function Output({
   output,
   savedTitles,
   save,
+  attach,
   t,
 }: {
   feature: string;
   output: unknown;
   savedTitles: Set<string>;
   save: (formData: FormData) => Promise<void>;
+  /** "Add to project" controls, or null when there is nothing to add to. */
+  attach: (pick: number, label: string) => React.ReactNode;
   t: Translate;
 }) {
   // Stored output is re-validated before rendering: the database is a boundary
@@ -165,6 +248,7 @@ function Output({
                   {t('titles.strength', { value: title.estimatedStrength })}
                 </p>
                 {title.reasoning && <p className="small">{title.reasoning}</p>}
+                {attach(index, t('toProject.pickTitle'))}
               </li>
             ))}
           </ol>
@@ -194,6 +278,7 @@ function Output({
             </>
           )}
           <p className="muted small">{t('description.copyHint')}</p>
+          {attach(0, t('toProject.submit'))}
         </section>
       );
     }
@@ -218,6 +303,7 @@ function Output({
           ))}
           <h2>{t('script.cta')}</h2>
           <p className="result__prose">{parsed.data.callToAction}</p>
+          {attach(0, t('toProject.submit'))}
         </section>
       );
     }

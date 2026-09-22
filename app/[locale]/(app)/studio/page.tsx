@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
+import { Field } from '@/components/forms/field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { SUPPORTED_LOCALES } from '@/domain/ai/types';
 import { requireUser } from '@/lib/auth/current-user';
@@ -17,6 +18,7 @@ import {
   generateTitles,
 } from '@/modules/ai/generate';
 import { getUsage, listGenerations } from '@/modules/ai/history';
+import { getProject } from '@/modules/content/projects';
 import {
   DescriptionRequest,
   IdeasRequest,
@@ -36,7 +38,7 @@ type Tool = (typeof TOOLS)[number];
 function fieldsOf(formData: FormData): Record<string, unknown> {
   const fields: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
-    if (key === 'tool' || key.startsWith('$ACTION')) continue;
+    if (key === 'tool' || key === 'project' || key.startsWith('$ACTION')) continue;
     if (typeof value === 'string' && value.trim() !== '') fields[key] = value;
   }
   if (formData.get('includeChapters') === 'on') fields.includeChapters = true;
@@ -48,7 +50,7 @@ export default async function StudioPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tool?: string; error?: string }>;
+  searchParams: Promise<{ tool?: string; error?: string; project?: string }>;
 }) {
   const { locale } = await params;
   const query = await searchParams;
@@ -60,11 +62,16 @@ export default async function StudioPage({
     : 'ideas';
 
   const t = await getTranslations('studio');
-  const [channels, usage, history] = await Promise.all([
+  const [channels, usage, history, projectResult] = await Promise.all([
     listChannels({ userId: user.id }),
     getUsage(user.id),
     listGenerations(user.id, 10),
+    query.project ? getProject(user.id, query.project) : Promise.resolve(null),
   ]);
+  // Generating for a project: prefill from it and carry it to the result page.
+  const project = projectResult?.ok ? projectResult.data : null;
+  const selectedTitle = project?.assets.find((a) => a.kind === 'TITLE' && a.isSelected)?.body;
+  const workingTitle = selectedTitle ?? project?.title ?? '';
   const channelList = channels.ok ? channels.data.channels : [];
   const toolUsage = usage.ok
     ? usage.data.features.find((f) => f.feature === FEATURE_BY_SLUG[tool])
@@ -80,6 +87,8 @@ export default async function StudioPage({
     'use server';
     const current = await requireUser(locale);
     const selected = String(formData.get('tool') ?? '') as Tool;
+    const projectId = String(formData.get('project') ?? '');
+    const forProject = /^[a-z0-9]{1,64}$/.test(projectId) ? `project=${projectId}` : '';
     const fields = fieldsOf(formData);
     const caller = { userId: current.id };
 
@@ -115,10 +124,13 @@ export default async function StudioPage({
         ),
       );
     }
+    const resultQuery = [result.data.cached ? 'cached=1' : '', forProject]
+      .filter(Boolean)
+      .join('&');
     redirect(
       localePath(
         locale,
-        `/studio/results/${result.data.generationId}${result.data.cached ? '?cached=1' : ''}`,
+        `/studio/results/${result.data.generationId}${resultQuery ? `?${resultQuery}` : ''}`,
       ),
     );
   }
@@ -141,7 +153,10 @@ export default async function StudioPage({
         {TOOLS.map((option) => (
           <Link
             key={option}
-            href={localePath(locale, `/studio?tool=${option}`)}
+            href={localePath(
+              locale,
+              `/studio?tool=${option}${project ? `&project=${project.id}` : ''}`,
+            )}
             className={option === tool ? 'segmented__item is-active' : 'segmented__item'}
             aria-current={option === tool ? 'page' : undefined}
           >
@@ -149,6 +164,13 @@ export default async function StudioPage({
           </Link>
         ))}
       </nav>
+
+      {project && (
+        <p className="flash flash--ok">
+          {t('forProject', { title: project.title })}{' '}
+          <Link href={localePath(locale, `/projects/${project.id}`)}>{t('backToProject')}</Link>
+        </p>
+      )}
 
       {errorText && (
         <p className="flash flash--bad" role="alert">
@@ -159,6 +181,7 @@ export default async function StudioPage({
       <section className="card">
         <form action={generate} className="form">
           <input type="hidden" name="tool" value={tool} />
+          {project && <input type="hidden" name="project" value={project.id} />}
 
           {tool === 'ideas' && (
             <>
@@ -174,10 +197,17 @@ export default async function StudioPage({
           {tool === 'titles' && (
             <>
               <Field label={t('fields.topic')} hint={t('fields.topicHint')}>
-                <textarea name="topic" required minLength={3} maxLength={500} rows={3} />
+                <textarea
+                  name="topic"
+                  required
+                  minLength={3}
+                  maxLength={500}
+                  rows={3}
+                  defaultValue={project?.title ?? ''}
+                />
               </Field>
               <Field label={t('fields.existingTitle')}>
-                <input name="existingTitle" maxLength={100} />
+                <input name="existingTitle" maxLength={100} defaultValue={selectedTitle ?? ''} />
               </Field>
             </>
           )}
@@ -185,7 +215,13 @@ export default async function StudioPage({
           {tool === 'description' && (
             <>
               <Field label={t('fields.title')}>
-                <input name="title" required minLength={3} maxLength={100} />
+                <input
+                  name="title"
+                  required
+                  minLength={3}
+                  maxLength={100}
+                  defaultValue={workingTitle.slice(0, 100)}
+                />
               </Field>
               <Field label={t('fields.summary')}>
                 <textarea name="summary" required minLength={3} maxLength={2000} rows={5} />
@@ -199,7 +235,13 @@ export default async function StudioPage({
           {tool === 'script' && (
             <>
               <Field label={t('fields.title')}>
-                <input name="title" required minLength={3} maxLength={100} />
+                <input
+                  name="title"
+                  required
+                  minLength={3}
+                  maxLength={100}
+                  defaultValue={workingTitle.slice(0, 100)}
+                />
               </Field>
               <Field label={t('fields.outline')}>
                 <textarea name="outline" maxLength={3000} rows={5} />
@@ -226,7 +268,10 @@ export default async function StudioPage({
               label={t('fields.channel')}
               hint={channelList.length ? t('channelNote') : undefined}
             >
-              <select name="channelId" defaultValue={channelList[0]?.id ?? ''}>
+              <select
+                name="channelId"
+                defaultValue={project ? (project.channelId ?? '') : (channelList[0]?.id ?? '')}
+              >
                 <option value="">{t('fields.noChannel')}</option>
                 {channelList.map((channel) => (
                   <option key={channel.id} value={channel.id}>
@@ -236,7 +281,7 @@ export default async function StudioPage({
               </select>
             </Field>
             <Field label={t('fields.language')} hint={t('languageNote')}>
-              <select name="locale" defaultValue="en">
+              <select name="locale" defaultValue={project?.locale ?? 'en'}>
                 {SUPPORTED_LOCALES.map((code) => (
                   <option key={code} value={code}>
                     {LOCALE_LABELS[code]}
@@ -294,22 +339,4 @@ export default async function StudioPage({
 function slugOf(feature: string): Tool {
   return (Object.entries(FEATURE_BY_SLUG).find(([, value]) => value === feature)?.[0] ??
     'ideas') as Tool;
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string | undefined;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="form__field">
-      <span className="form__label">{label}</span>
-      {children}
-      {hint && <span className="form__hint">{hint}</span>}
-    </label>
-  );
 }
