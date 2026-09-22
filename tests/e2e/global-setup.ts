@@ -55,6 +55,29 @@ export default async function globalSetup() {
     const user = await prisma.user.create({
       data: { email: E2E_USER_EMAIL, name: 'E2E', settings: { create: {} } },
     });
+    // A connected channel, so channel pages can be exercised. The grant is a
+    // placeholder: no e2e test calls Google.
+    await prisma.youTubeConnection.create({
+      data: {
+        id: 'e2e-connection',
+        userId: user.id,
+        googleSub: 'e2e-sub',
+        googleEmail: E2E_USER_EMAIL,
+        encryptedRefreshToken: 'not-a-real-token',
+        scopes: [],
+      },
+    });
+    await prisma.youTubeChannel.create({
+      data: {
+        id: 'e2e-channel',
+        connectionId: 'e2e-connection',
+        userId: user.id,
+        youtubeChannelId: 'UC_e2e',
+        title: 'E2E Street Food',
+        uploadsPlaylistId: 'UU_e2e',
+      },
+    });
+
     const token = randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 2 * 3_600_000);
     await prisma.session.create({ data: { sessionToken: token, userId: user.id, expires } });

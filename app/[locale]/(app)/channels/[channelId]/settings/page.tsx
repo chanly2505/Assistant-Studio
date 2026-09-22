@@ -39,12 +39,14 @@ export default async function ChannelSettingsPage({
   async function save(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
-    const field = (name: string) => String(formData.get(name) ?? '');
+    // No helper function in here: Next 15.1's server-action compiler loses the
+    // page's variables (locale, channelId) when an action defines a nested
+    // function, and the action then fails with "locale is not defined".
     const parsed = UpdateChannelSettingsRequest.safeParse({
-      niche: field('niche'),
-      targetAudience: field('targetAudience'),
-      brandVoice: field('brandVoice'),
-      keywords: field('keywords'),
+      niche: String(formData.get('niche') ?? ''),
+      targetAudience: String(formData.get('targetAudience') ?? ''),
+      brandVoice: String(formData.get('brandVoice') ?? ''),
+      keywords: String(formData.get('keywords') ?? ''),
     });
     if (!parsed.success) redirect(`${self}?error=errors.validationFailed`);
     const saved = await updateChannelSettings(me.id, channelId, parsed.data);
