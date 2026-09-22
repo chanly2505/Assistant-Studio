@@ -50,3 +50,32 @@ export async function reserveYouTubeQuota(
 
   return { unitsUsed, cost };
 }
+
+/**
+ * Reserve one YouTube Analytics API request against OUR daily budget.
+ *
+ * Google's documentation does not state a per-request quota cost for the
+ * Analytics API, so this counts requests against a ceiling we set ourselves
+ * (YOUTUBE_ANALYTICS_DAILY_REQUEST_BUDGET). Keep it below the limit shown for
+ * this project in Google Cloud Console → APIs & Services → Quotas.
+ */
+export async function reserveAnalyticsRequest(
+  kind: CallKind,
+  now = new Date(),
+): Promise<{ requestsUsed: number }> {
+  const dailyBudget = env.YOUTUBE_ANALYTICS_DAILY_REQUEST_BUDGET;
+  const requestsUsed = await quotaRepository.reserve({
+    api: 'YOUTUBE_ANALYTICS',
+    day: quotaDayKey(now),
+    cost: 1,
+    dailyBudget,
+    threshold: admissionThreshold(kind, dailyBudget),
+  });
+
+  if (requestsUsed === null) {
+    throw new AppError('YOUTUBE_QUOTA_EXCEEDED', {
+      detail: `${kind} analytics request refused: daily analytics request budget reached`,
+    });
+  }
+  return { requestsUsed };
+}

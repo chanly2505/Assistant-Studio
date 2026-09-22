@@ -15,13 +15,17 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: false,
-    setupFiles: ['./tests/helpers/setup.ts'],
+    setupFiles: ['./tests/helpers/setup.ts', './tests/helpers/setup-fakes.ts'],
     include: ['tests/**/*.test.ts'],
     // Integration tests share one PostgreSQL database; running files in
     // parallel lets one suite TRUNCATE while another inserts, which deadlocks.
     // (Vitest 2's default pool is `forks`, so a `threads.singleThread` setting
     // is silently ignored — `fileParallelism` is the option that applies.)
     fileParallelism: false,
+    // Integration hooks TRUNCATE ~25 tables. Under machine load one such hook
+    // took 11 s and tripped the 10 s default (not reproduced in 5 reruns; no
+    // lock waits observed). 30 s still fails a genuinely stuck hook.
+    hookTimeout: 30_000,
     // next-auth imports `next/server` without an extension, which Node's ESM
     // loader cannot resolve outside Next.js. Letting Vite process it fixes that.
     server: { deps: { inline: ['next-auth', '@auth/core'] } },

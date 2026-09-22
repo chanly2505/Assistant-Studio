@@ -66,11 +66,15 @@ async function refreshFor(params: {
   }
 
   const vault = getTokenVault();
-  const refreshToken = vault.decrypt(
-    connection.encryptedRefreshToken,
-    connection.id,
-    'refreshToken',
-  );
+  let refreshToken: SecretString;
+  try {
+    refreshToken = vault.decrypt(connection.encryptedRefreshToken, connection.id, 'refreshToken');
+  } catch (cause) {
+    throw new AppError('CREDENTIAL_UNREADABLE', {
+      detail: 'refresh token could not be decrypted: check TOKEN_ENCRYPTION_KEY(_PREVIOUS)',
+      cause,
+    });
+  }
 
   let refreshed;
   try {

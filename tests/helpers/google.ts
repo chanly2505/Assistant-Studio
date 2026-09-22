@@ -23,6 +23,7 @@ export const googleServer = setupServer();
 /** Every request the fake received, for assertions like "exactly one refresh". */
 export const received: Array<{
   url: string;
+  query: URLSearchParams;
   body: URLSearchParams | null;
   authorization: string | null;
 }> = [];
@@ -32,6 +33,7 @@ googleServer.events.on('request:start', async ({ request }) => {
   const text = request.method === 'POST' ? await clone.text() : '';
   received.push({
     url: request.url.split('?')[0] ?? request.url,
+    query: new URL(request.url).searchParams,
     body: text ? new URLSearchParams(text) : null,
     authorization: request.headers.get('authorization'),
   });
@@ -174,3 +176,278 @@ export const google = {
     });
   },
 };
+
+/* ------------------------------ YouTube catalog ------------------------------ */
+
+export const PLAYLIST_URL = 'https://www.googleapis.com/youtube/v3/playlistItems';
+export const VIDEOS_URL = 'https://www.googleapis.com/youtube/v3/videos';
+
+export interface FakeVideo {
+  id: string;
+  snippet: { title: string; publishedAt: string; description?: string; thumbnails?: object };
+  contentDetails: { duration: string };
+  status: { privacyStatus: 'public' | 'unlisted' | 'private' };
+  statistics: { viewCount?: string; likeCount?: string; commentCount?: string };
+}
+
+export function videoItem(
+  id: string,
+  options: {
+    title?: string;
+    publishedAt?: string;
+    duration?: string;
+    privacy?: 'public' | 'unlisted' | 'private';
+    views?: number;
+    likes?: number | null;
+    comments?: number | null;
+  } = {},
+): FakeVideo {
+  return {
+    id,
+    snippet: {
+      title: options.title ?? `Video ${id}`,
+      publishedAt: options.publishedAt ?? '2026-09-01T10:00:00Z',
+      thumbnails: { medium: { url: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` } },
+    },
+    contentDetails: { duration: options.duration ?? 'PT8M30S' },
+    status: { privacyStatus: options.privacy ?? 'public' },
+    statistics: {
+      viewCount: String(options.views ?? 100),
+      ...(options.likes === null ? {} : { likeCount: String(options.likes ?? 10) }),
+      ...(options.comments === null ? {} : { commentCount: String(options.comments ?? 2) }),
+    },
+  };
+}
+
+/**
+ * A channel's uploads as YouTube would serve them: `playlist` is the uploads
+ * order (newest first), paged; `videos` answers by id. An id in the playlist
+ * but absent from `catalog` behaves like a deleted video.
+ */
+export function youtubeCatalog(
+  playlist: string[],
+  catalog: FakeVideo[],
+  options: { pageSize?: number } = {},
+) {
+  const pageSize = options.pageSize ?? 50;
+  const byId = new Map(catalog.map((video) => [video.id, video]));
+
+  return [
+    http.get(PLAYLIST_URL, ({ request }) => {
+      const url = new URL(request.url);
+      const start = Number(url.searchParams.get('pageToken') ?? '0');
+      const slice = playlist.slice(start, start + pageSize);
+      const next = start + pageSize < playlist.length ? String(start + pageSize) : undefined;
+      return HttpResponse.json({
+        pageInfo: { totalResults: playlist.length },
+        ...(next ? { nextPageToken: next } : {}),
+        items: slice.map((videoId) => ({ contentDetails: { videoId } })),
+      });
+    }),
+    http.get(VIDEOS_URL, ({ request }) => {
+      const ids = (new URL(request.url).searchParams.get('id') ?? '').split(',').filter(Boolean);
+      return HttpResponse.json({
+        items: ids.map((id) => byId.get(id)).filter(Boolean),
+      });
+    }),
+  ];
+}
+
+export function playlistNotFound() {
+  return http.get(PLAYLIST_URL, () =>
+    HttpResponse.json(
+      { error: { code: 404, errors: [{ reason: 'playlistNotFound' }] } },
+      { status: 404 },
+    ),
+  );
+}
+
+/* ------------------------------ YouTube Analytics ------------------------------ */
+
+export const ANALYTICS_URL = 'https://youtubeanalytics.googleapis.com/v2/reports';
+
+export interface FakeDay {
+  day: string;
+  views?: number;
+  minutes?: number;
+  gained?: number;
+  lost?: number;
+}
+
+/**
+ * Answers reports.query like YouTube: a result table whose columns follow the
+ * requested dimensions + metrics, rows only for days that have data (days in
+ * `days` outside the requested window are dropped). `byVideo` supplies a
+ * video's series when the request filters video==ID.
+ */
+export function youtubeAnalytics(
+  channelDays: FakeDay[],
+  options: { byVideo?: Record<string, FakeDay[]>; reverseColumns?: boolean } = {},
+) {
+  return http.get(ANALYTICS_URL, ({ request }) => {
+    const query = new URL(request.url).searchParams;
+    const start = query.get('startDate') ?? '';
+    const end = query.get('endDate') ?? '';
+    const filter = query.get('filters') ?? '';
+    const videoId = filter.startsWith('video==') ? filter.slice('video=='.length) : null;
+    const source = videoId ? (options.byVideo?.[videoId] ?? []) : channelDays;
+
+    let columns = ['day', ...(query.get('metrics') ?? '').split(',')];
+    if (options.reverseColumns) columns = [...columns].reverse();
+
+    const valueOf = (d: FakeDay, column: string): string | number => {
+      switch (column) {
+        case 'day':
+          return d.day;
+        case 'views':
+          return d.views ?? 0;
+        case 'estimatedMinutesWatched':
+          return d.minutes ?? 0;
+        case 'averageViewDuration':
+          return d.views ? Math.round(((d.minutes ?? 0) * 60) / d.views) : 0;
+        case 'averageViewPercentage':
+          return 42.5;
+        case 'subscribersGained':
+          return d.gained ?? 0;
+        case 'subscribersLost':
+          return d.lost ?? 0;
+        default:
+          return 0;
+      }
+    };
+
+    const rows = source
+      .filter((d) => d.day >= start && d.day <= end)
+      .map((d) => columns.map((column) => valueOf(d, column)));
+
+    return HttpResponse.json({
+      kind: 'youtubeAnalytics#resultTable',
+      columnHeaders: columns.map((name) => ({
+        name,
+        columnType: name === 'day' ? 'DIMENSION' : 'METRIC',
+        dataType: name === 'day' ? 'STRING' : 'INTEGER',
+      })),
+      // YouTube omits `rows` entirely when there is no data.
+      ...(rows.length ? { rows } : {}),
+    });
+  });
+}
+
+export function analyticsError(status: number, reason: string) {
+  return http.get(ANALYTICS_URL, () =>
+    HttpResponse.json({ error: { code: status, errors: [{ reason }] } }, { status }),
+  );
+}
+
+/* ---------------------------------- OpenAI ---------------------------------- */
+// Lives beside the Google fakes so every suite shares ONE MSW server (and its
+// onUnhandledRequest: 'error' guard).
+
+export const OPENAI_URL = 'https://api.openai.com/v1/responses';
+
+export type FakeOpenAIReply =
+  | { kind: 'json'; value: unknown; usage?: { input: number; output: number; cached?: number } }
+  | { kind: 'text'; text: string; usage?: { input: number; output: number } }
+  | { kind: 'refusal' }
+  | { kind: 'incomplete'; reason: string }
+  | { kind: 'http'; status: number; body?: unknown };
+
+/** Bodies of every request the fake received, parsed. */
+export const openaiRequests: Array<Record<string, unknown>> = [];
+
+/**
+ * Answers /v1/responses from a script: the first request gets replies[0], the
+ * next replies[1]… The last reply repeats once the script runs out.
+ */
+export function openai(replies: FakeOpenAIReply[]) {
+  let index = 0;
+  return http.post(OPENAI_URL, async ({ request }) => {
+    openaiRequests.push((await request.json()) as Record<string, unknown>);
+    const reply = replies[Math.min(index, replies.length - 1)] as FakeOpenAIReply;
+    index += 1;
+
+    const usage = (u?: { input: number; output: number; cached?: number }) => ({
+      input_tokens: u?.input ?? 1_000,
+      input_tokens_details: { cached_tokens: u?.cached ?? 0 },
+      output_tokens: u?.output ?? 500,
+      total_tokens: (u?.input ?? 1_000) + (u?.output ?? 500),
+    });
+    const message = (content: unknown[]) => [{ type: 'message', role: 'assistant', content }];
+
+    switch (reply.kind) {
+      case 'json':
+        return HttpResponse.json({
+          status: 'completed',
+          output: message([{ type: 'output_text', text: JSON.stringify(reply.value) }]),
+          usage: usage(reply.usage),
+        });
+      case 'text':
+        return HttpResponse.json({
+          status: 'completed',
+          output: message([{ type: 'output_text', text: reply.text }]),
+          usage: usage(reply.usage),
+        });
+      case 'refusal':
+        return HttpResponse.json({
+          status: 'completed',
+          output: message([{ type: 'refusal', refusal: "I can't help with that." }]),
+          usage: usage({ input: 800, output: 20 }),
+        });
+      case 'incomplete':
+        return HttpResponse.json({
+          status: 'incomplete',
+          incomplete_details: { reason: reply.reason },
+          output: message([{ type: 'output_text', text: '{"ideas":[{"title":"trunc' }]),
+          usage: usage({ input: 900, output: 3_000 }),
+        });
+      case 'http':
+        return HttpResponse.json(reply.body ?? { error: { code: 'server_error' } }, {
+          status: reply.status,
+        });
+    }
+  });
+}
+
+export function resetOpenAI(): void {
+  openaiRequests.length = 0;
+}
+
+/** Schema-valid outputs, one per feature. */
+export const validOutputs = {
+  IDEAS: {
+    ideas: Array.from({ length: 3 }, (_, i) => ({
+      title: `Idea number ${i + 1}`,
+      angle: 'Follow a vendor from setup to the lunch rush.',
+      hook: 'Most visitors never see this.',
+      format: 'vlog',
+      keywords: ['street food', 'phnom penh'],
+      rationale: 'Behind-the-scenes content suits a local-food channel.',
+    })),
+  },
+  TITLES: {
+    titles: Array.from({ length: 5 }, (_, i) => ({
+      text: `A perfectly good title ${i + 1}`,
+      style: 'direct',
+      reasoning: 'Clear and specific.',
+      estimatedStrength: 3,
+    })),
+  },
+  DESCRIPTION: {
+    description: 'A '.repeat(40) + 'description long enough to be useful.',
+    hashtags: ['#streetfood'],
+    chapters: null,
+  },
+  SCRIPT: {
+    hook: 'You have walked past this stall a hundred times.',
+    sections: [{ heading: 'Setup', body: 'At four in the morning the charcoal is already lit.' }],
+    callToAction: 'Subscribe for the next market.',
+    estimatedDurationSeconds: 480,
+  },
+  PLAN: {
+    summary: 'Four weeks building a local-food audience.',
+    cadence: 'Two videos per week',
+    entries: [
+      { week: 1, title: 'Best breakfast stalls', format: 'long', goal: 'Establish the niche' },
+    ],
+  },
+} as const;

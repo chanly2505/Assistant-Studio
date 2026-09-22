@@ -11,7 +11,8 @@
     "calendar": "Calendar",
     "settings": "Settings",
     "signOut": "Sign out",
-    "signedInAs": "Signed in as {email}"
+    "signedInAs": "Signed in as {email}",
+    "ideas": "Ideas"
   },
   "home": {
     "status": "System status",
@@ -66,8 +67,23 @@
       "CONFIGURATION_MISSING": "Channel connection isn't configured on this server yet.",
       "RATE_LIMITED": "Too many attempts. Please wait a few minutes and try again.",
       "UPSTREAM_UNAVAILABLE": "Google is temporarily unavailable. Please try again shortly.",
-      "generic": "Something went wrong. Please try again."
-    }
+      "generic": "Something went wrong. Please try again.",
+      "syncQueued": "Refresh queued. New videos and statistics will appear in a minute or two.",
+      "YOUTUBE_REAUTH_REQUIRED": "Access to this channel expired. Reconnect it to refresh.",
+      "NOT_FOUND": "That channel isn't connected any more."
+    },
+    "viewVideos": "View videos",
+    "refresh": "Refresh now",
+    "syncStatus": {
+      "NEVER_SYNCED": "Not synced yet",
+      "QUEUED": "Sync queued",
+      "SYNCING": "Syncing…",
+      "SYNCED": "Up to date",
+      "FAILED": "Last sync failed — it will retry automatically",
+      "PAUSED": "Sync paused until you reconnect"
+    },
+    "lastSynced": "Videos last fully synced {date}",
+    "viewAnalytics": "View analytics"
   },
   "errors": {
     "unauthenticated": "Please sign in again to continue.",
@@ -84,7 +100,9 @@
     "ai": {
       "limitReached": "You've used all your generations for this month. Your limit resets on {resetAt}.",
       "invalidOutput": "We couldn't generate that. Please try again.",
-      "unavailable": "AI features are temporarily unavailable."
+      "unavailable": "AI features are temporarily unavailable.",
+      "refused": "The AI couldn't help with that request. Try rephrasing it.",
+      "notConfigured": "AI features aren't set up on this server yet."
     },
     "youtube": {
       "reauthRequired": "Your YouTube connection expired. Reconnect your channel to keep syncing.",
@@ -111,11 +129,391 @@
       "custom": "This value isn't valid.",
       "contentType": "Expected JSON.",
       "invalidJson": "The request body isn't valid JSON."
+    },
+    "content": {
+      "needsScheduleDate": "Set a date and time before marking this as scheduled.",
+      "ideaPromoted": "This idea is already a project, so it stays with the project.",
+      "tooManyProjects": "You've reached the maximum number of active projects. Archive some to add more.",
+      "tooManyVersions": "This has reached the maximum number of versions. Start a new project or keep editing the selected one.",
+      "assetTooLong": "That text is longer than allowed for this kind of asset.",
+      "generationFailed": "That AI result didn't complete, so there's nothing to add.",
+      "notAnAsset": "This kind of AI result can't be added to a project.",
+      "compareSameKind": "Only versions of the same kind can be compared.",
+      "badTimeZone": "That time zone isn't recognised."
     }
   },
   "common": {
     "retry": "Try again",
     "loading": "Loading…",
     "dataThrough": "Data through {date}"
+  },
+  "videos": {
+    "title": "Videos",
+    "back": "All channels",
+    "empty": "No videos yet.",
+    "emptyPending": "No videos yet — the first sync is queued or running. This page fills in as it completes.",
+    "loadMore": "Load more",
+    "published": "Published {date}",
+    "views": "{count} views",
+    "likes": "{count} likes",
+    "likesHidden": "Likes hidden",
+    "comments": "{count} comments",
+    "commentsOff": "Comments off",
+    "shortForm": "3 min or less",
+    "shortFormHint": "By length only — YouTube does not say which videos are Shorts.",
+    "privacy": {
+      "PUBLIC": "Public",
+      "UNLISTED": "Unlisted",
+      "PRIVATE": "Private"
+    },
+    "statsAsOf": "Statistics as of {date}",
+    "noStats": "Statistics not fetched yet"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "back": "All channels",
+    "periods": {
+      "7": "7 days",
+      "28": "28 days",
+      "90": "90 days",
+      "365": "365 days"
+    },
+    "periodLabel": "Period",
+    "range": "{from} – {to}",
+    "planLimited": "Your plan includes {days} days of analytics history.",
+    "dataThrough": "Final figures through {date}. The last few days may still change — YouTube takes 2–3 days to finish counting.",
+    "noFinalData": "YouTube is still processing these days. Figures may change.",
+    "empty": "No analytics yet. The first sync runs shortly after you connect a channel; YouTube data also arrives 2–3 days late, so a brand-new channel may take a few days to show anything.",
+    "kpi": {
+      "views": "Views",
+      "watchHours": "Watch time (hours)",
+      "avgDuration": "Average view duration",
+      "netSubscribers": "Net subscribers"
+    },
+    "change": "{sign}{percent} vs previous {days} days",
+    "noComparison": "Not enough earlier data to compare",
+    "gapsNote": "{known} of {total} days have data.",
+    "charts": {
+      "views": "Daily views",
+      "subscribers": "Subscribers gained minus lost, per day",
+      "subscribersWeekly": "Subscribers gained minus lost, per week",
+      "noData": "No data",
+      "provisional": "May still change",
+      "showTable": "Show as table",
+      "date": "Date",
+      "weekOf": "Week of"
+    },
+    "topVideos": {
+      "title": "Top videos in this period",
+      "note": "Daily figures are collected for recent uploads and your top videos, so older, quieter videos may not appear here.",
+      "video": "Video",
+      "views": "Views",
+      "watchHours": "Watch hours",
+      "empty": "No per-video figures for this period yet."
+    },
+    "limitations": "YouTube's API doesn't provide impressions or click-through rate, so they aren't shown here. Revenue isn't requested.",
+    "changeAbsolute": "{value} vs previous {days} days"
+  },
+  "studio": {
+    "title": "Studio",
+    "subtitle": "Get ideas, titles, descriptions, scripts and plans for your videos. Everything you generate is saved to your history.",
+    "tools": {
+      "ideas": "Video ideas",
+      "titles": "Titles",
+      "description": "Description",
+      "script": "Script",
+      "plan": "Content plan"
+    },
+    "fields": {
+      "topic": "What is the video about?",
+      "topicHint": "For example: \"the best breakfast stalls in Phnom Penh\"",
+      "count": "How many ideas",
+      "existingTitle": "Your current title (optional)",
+      "title": "Video title",
+      "summary": "What happens in the video?",
+      "includeChapters": "Add chapters with timestamps",
+      "outline": "Your outline or notes (optional)",
+      "targetMinutes": "Length (minutes)",
+      "goal": "What do you want to achieve?",
+      "goalHint": "For example: \"grow to 1,000 subscribers\" or \"bring more customers to my restaurant\"",
+      "weeks": "Number of weeks",
+      "channel": "Use a channel for context",
+      "noChannel": "No channel",
+      "language": "Write the result in"
+    },
+    "languageNote": "Results in Khmer, Thai, Vietnamese or Chinese may need more editing than English.",
+    "channelNote": "Using a channel gives the AI its niche, audience, typical video length and best recent titles. It never sends viewer data.",
+    "generate": "Generate",
+    "generating": "Generating… this can take up to a minute",
+    "remaining": "{remaining} of {limit} left this month · resets {date}",
+    "noneLeft": "No uses left this month for this tool. Resets {date}.",
+    "history": "Recent results",
+    "historyEmpty": "Nothing generated yet.",
+    "status": {
+      "OK": "Done",
+      "INVALID_OUTPUT": "Failed",
+      "PROVIDER_ERROR": "Failed",
+      "TIMEOUT": "Timed out",
+      "FILTERED": "Declined"
+    },
+    "errors": {
+      "AI_LIMIT_REACHED": "You've used this month's allowance for this tool.",
+      "AI_REFUSED": "The AI couldn't help with that request. Try rephrasing it.",
+      "AI_INVALID_OUTPUT": "The AI's answer didn't come out right. Please try again — this didn't use your allowance.",
+      "AI_UNAVAILABLE": "The AI service is busy or unavailable right now. Please try again shortly — this didn't use your allowance.",
+      "CONFIGURATION_MISSING": "AI features aren't set up on this server yet.",
+      "RATE_LIMITED": "Too many requests in a short time. Please wait a minute.",
+      "VALIDATION_FAILED": "Please check the form — something is missing or too long.",
+      "NOT_FOUND": "That channel isn't available.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "forProject": "Working on “{title}”. On the result page you can add what you generate to this project.",
+    "backToProject": "Back to the project"
+  },
+  "results": {
+    "back": "Back to Studio",
+    "cached": "You asked for this recently, so here is the same result again. It did not use your allowance.",
+    "failed": "This request didn't produce a result.",
+    "input": "You asked for",
+    "model": "Generated with {model}",
+    "ideas": {
+      "angle": "Angle",
+      "hook": "Opening hook",
+      "keywords": "Keywords",
+      "why": "Why it could work",
+      "save": "Save idea",
+      "saved": "Saved",
+      "saving": "Saving…"
+    },
+    "formats": {
+      "short": "Short",
+      "long": "Long-form",
+      "tutorial": "Tutorial",
+      "vlog": "Vlog",
+      "interview": "Interview",
+      "review": "Review"
+    },
+    "titles": {
+      "strength": "AI's estimate: {value} of 5",
+      "strengthNote": "The estimate is the AI's opinion, not a measurement of how the title will perform.",
+      "characters": "{count} characters"
+    },
+    "titleStyles": {
+      "curiosity": "Curiosity",
+      "howto": "How-to",
+      "listicle": "List",
+      "emotional": "Emotional",
+      "direct": "Direct"
+    },
+    "description": {
+      "copyHint": "Select the text to copy it into YouTube Studio.",
+      "hashtags": "Hashtags",
+      "chapters": "Chapters"
+    },
+    "script": {
+      "hook": "Hook",
+      "cta": "Call to action",
+      "duration": "About {minutes} min when spoken"
+    },
+    "plan": {
+      "cadence": "Suggested cadence",
+      "week": "Week",
+      "titleCol": "Video",
+      "format": "Format",
+      "goal": "Purpose"
+    },
+    "toProject": {
+      "heading": "Add to a project",
+      "choose": "Project",
+      "submit": "Add to project",
+      "submitting": "Adding…",
+      "pickTitle": "Add this title",
+      "none": "Create a project first to collect results in it.",
+      "create": "Go to projects",
+      "added": "Added to “{project}” as version {version}.",
+      "alreadyAdded": "Already in “{project}” (version {version}).",
+      "open": "Open project",
+      "target": "Anything you add goes to “{project}”."
+    }
+  },
+  "content": {
+    "statuses": {
+      "IDEA": "Idea",
+      "SCRIPTING": "Scripting",
+      "FILMING": "Filming",
+      "EDITING": "Editing",
+      "SCHEDULED": "Scheduled",
+      "PUBLISHED": "Published",
+      "ARCHIVED": "Archived"
+    },
+    "kinds": {
+      "TITLE": "Title",
+      "DESCRIPTION": "Description",
+      "SCRIPT": "Script",
+      "TAGS": "Tags",
+      "THUMBNAIL_BRIEF": "Thumbnail brief",
+      "CHAPTERS": "Chapters"
+    },
+    "sources": {
+      "AI": "AI",
+      "USER": "You"
+    },
+    "timeZone": {
+      "shownIn": "Times are in {zone}.",
+      "use": "Use {zone} instead"
+    },
+    "saved": "Saved."
+  },
+  "ideas": {
+    "title": "Ideas",
+    "subtitle": "Ideas you saved from Studio or wrote yourself. Start a project when one is worth making.",
+    "tabs": {
+      "SAVED": "Saved",
+      "PROMOTED": "In projects",
+      "ARCHIVED": "Archived"
+    },
+    "add": {
+      "heading": "Add an idea",
+      "title": "Idea",
+      "angle": "Angle",
+      "hook": "Opening hook",
+      "keywords": "Keywords",
+      "keywordsHint": "Separate with commas.",
+      "submit": "Save idea",
+      "submitting": "Saving…"
+    },
+    "empty": "No ideas here yet.",
+    "emptyHint": "Generate some in Studio, or add one above.",
+    "studioLink": "Generate ideas in Studio",
+    "fromAi": "From AI",
+    "yours": "Yours",
+    "startProject": "Start project",
+    "starting": "Starting…",
+    "openProject": "Open project",
+    "archive": "Archive",
+    "restore": "Restore",
+    "delete": "Delete"
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Every video you are working on, by stage.",
+    "new": {
+      "heading": "New project",
+      "title": "Working title",
+      "submit": "Create project",
+      "submitting": "Creating…"
+    },
+    "empty": "No projects yet. Start one here, or from an idea.",
+    "column": {
+      "empty": "Nothing here"
+    },
+    "scheduledFor": "Scheduled {date}",
+    "assets": "{count, plural, =0 {No versions yet} one {# version} other {# versions}}",
+    "archivedLink": "Archived projects ({count})",
+    "activeLink": "Back to the board",
+    "archivedTitle": "Archived projects",
+    "moveTo": "Move to",
+    "move": "Move",
+    "next": "Move to {status}"
+  },
+  "project": {
+    "back": "All projects",
+    "details": "Details",
+    "fields": {
+      "title": "Working title",
+      "notes": "Notes",
+      "scheduledFor": "Publish date and time",
+      "scheduledHint": "Leave empty if not decided yet.",
+      "channel": "Channel",
+      "noChannel": "No channel",
+      "language": "Language"
+    },
+    "save": "Save details",
+    "saving": "Saving…",
+    "status": {
+      "heading": "Status",
+      "current": "Now: {status}",
+      "moveTo": "Move to",
+      "note": "Note (optional)",
+      "move": "Move",
+      "moving": "Moving…",
+      "archive": "Archive project",
+      "restore": "Restore to {status}",
+      "published": "Published {date}"
+    },
+    "history": {
+      "heading": "History",
+      "created": "Created as {status}",
+      "moved": "{from} → {to}"
+    },
+    "assets": {
+      "heading": "Titles, description and script",
+      "intro": "Each change is kept as a new version. Select the one you will use.",
+      "none": "No versions yet.",
+      "version": "Version {version}",
+      "selected": "Selected",
+      "select": "Use this one",
+      "compare": "Compare with selected",
+      "by": "by {source}",
+      "characters": "{count} / {max} characters",
+      "add": "Add a version",
+      "kind": "Kind",
+      "body": "Text",
+      "addSubmit": "Save version",
+      "adding": "Saving…",
+      "generate": "Generate with AI",
+      "generateTitles": "Titles",
+      "generateDescription": "Description",
+      "generateScript": "Script"
+    },
+    "calendar": {
+      "heading": "On the calendar",
+      "none": "Nothing on the calendar for this project.",
+      "add": "Add a reminder"
+    },
+    "danger": {
+      "heading": "Delete project",
+      "body": "The project disappears from your board and calendar. Its ideas go back to your idea list.",
+      "submit": "Delete project"
+    }
+  },
+  "compare": {
+    "title": "Compare versions",
+    "back": "Back to the project",
+    "legend": "Lines only in version {before} are marked −, lines only in version {after} are marked +.",
+    "identical": "These two versions are identical."
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Scheduled videos and your own reminders.",
+    "previous": "Previous month",
+    "next": "Next month",
+    "thisMonth": "This month",
+    "empty": "Nothing scheduled this month.",
+    "listHeading": "This month",
+    "project": "Video",
+    "entryTypes": {
+      "REMINDER": "Reminder",
+      "TASK": "Task",
+      "NOTE": "Note"
+    },
+    "add": {
+      "heading": "Add to the calendar",
+      "title": "What",
+      "type": "Type",
+      "date": "Date",
+      "time": "Time",
+      "timeHint": "Leave empty for an all-day item.",
+      "notes": "Notes",
+      "project": "Project (optional)",
+      "noProject": "None",
+      "submit": "Add",
+      "submitting": "Adding…"
+    },
+    "allDay": "All day",
+    "done": "Mark done",
+    "undo": "Mark not done",
+    "delete": "Delete",
+    "statusDone": "Done"
   }
 }

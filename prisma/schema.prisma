@@ -376,7 +376,10 @@ model YouTubeVideo {
   tags                 String[]
   categoryId           String?
   defaultLanguage      String?
-  isShort              Boolean             @default(false)
+  /// Heuristic, NOT a YouTube fact: duration > 0 and <= 180 s (the Shorts length
+  /// limit). The Data API exposes no "is a Short" field, so a 2-minute regular
+  /// upload is also true here. The UI labels this "3 min or less", never "Short".
+  isShortForm          Boolean             @default(false)
   syncTier             SyncTier            @default(HOT)
   lastStatsSyncAt      DateTime?
   firstSeenAt          DateTime            @default(now())
@@ -597,6 +600,12 @@ model AIGeneration {
   inputTokens   Int                @default(0)
   outputTokens  Int                @default(0)
   costMicros    BigInt             @default(0)
+  /// False when the provider did not report usage or the model is unpriced.
+  /// costMicros then holds a conservative estimate, never a silent 0.
+  costKnown     Boolean            @default(true)
+  /// What the user asked for (topic, title, goal…) — user-authored text only,
+  /// never YouTube API payloads. Shown in the generation history.
+  inputJson     Json?
   latencyMs     Int?
   status        AIGenerationStatus @default(PENDING)
   errorCode     String?
@@ -655,6 +664,8 @@ model SyncJob {
   quotaUnitsUsed Int           @default(0)
   errorCode      String?
   errorMessage   String?       @db.Text
+  /// What caused this run: connect | manual | schedule.
+  trigger        String        @default("schedule")
   attempt        Int           @default(1)
   createdAt      DateTime      @default(now())
 

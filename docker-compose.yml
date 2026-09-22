@@ -26,14 +26,15 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
-    container_name: ysa-redis
+    image: valkey/valkey:8-alpine
+    container_name: ysa-valkey
     restart: unless-stopped
     ports:
       - '6379:6379'
-    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    command:
+      ['valkey-server', '--save', '', '--appendonly', 'no', '--maxmemory-policy', 'noeviction']
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'valkey-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 10

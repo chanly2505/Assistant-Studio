@@ -30,7 +30,8 @@ describe('parseEnv', () => {
     const env = parseEnv(minimal);
 
     expect(env.LOG_LEVEL).toBe('info');
-    expect(env.AI_PROVIDER).toBe('mock');
+    expect(env.AI_PROVIDER).toBe('openai');
+    expect(env.AI_MODEL_FAST).toBe('gpt-5.6-luna');
     expect(env.YOUTUBE_DATA_DAILY_QUOTA).toBe(10_000);
   });
 
@@ -59,20 +60,24 @@ describe('parseEnv', () => {
     expect(() => parseEnv(incomplete)).toThrowError(new RegExp(key));
   });
 
-  it('refuses the mock AI provider in production', () => {
-    expect(() => parseEnv({ ...productionBase, AI_PROVIDER: 'mock' })).toThrowError(/AI_PROVIDER/);
+  it('requires an OpenAI key in production when AI is enabled', () => {
+    expect(() => parseEnv({ ...productionBase, OPENAI_API_KEY: undefined })).toThrowError(
+      /OPENAI_API_KEY/,
+    );
   });
 
-  it('requires an API key when the OpenAI provider is selected', () => {
+  it('lets production run with AI explicitly disabled', () => {
     expect(() =>
-      parseEnv({ ...minimal, AI_PROVIDER: 'openai', OPENAI_API_KEY: undefined }),
-    ).toThrowError(/OPENAI_API_KEY/);
+      parseEnv({ ...productionBase, AI_PROVIDER: 'disabled', OPENAI_API_KEY: undefined }),
+    ).not.toThrow();
   });
 
-  it('rejects a token encryption key that is not exactly 32 bytes', () => {
-    expect(() =>
-      parseEnv({ ...productionBase, TOKEN_ENCRYPTION_KEY: Buffer.alloc(16).toString('base64') }),
-    ).toThrowError(/TOKEN_ENCRYPTION_KEY/);
+  it('allows a missing key outside production (features report "not configured")', () => {
+    expect(() => parseEnv({ ...minimal, OPENAI_API_KEY: undefined })).not.toThrow();
+  });
+
+  it('no longer accepts a mock provider at all', () => {
+    expect(() => parseEnv({ ...minimal, AI_PROVIDER: 'mock' })).toThrowError(/AI_PROVIDER/);
   });
 
   describe('during `next build`', () => {

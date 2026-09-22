@@ -42,6 +42,8 @@ const config = [
         // Listed before `lib` so it matches first. Session lookup and the
         // Auth.js adapter genuinely need the database; nothing else in lib does.
         { type: 'auth', pattern: 'src/lib/auth/**/*', mode: 'full' },
+        // Presentational components (charts): pure rendering, no data access.
+        { type: 'ui', pattern: 'src/components/**/*', mode: 'full' },
         { type: 'module', pattern: 'src/modules/**/*', mode: 'full' },
         { type: 'service', pattern: 'src/services/**/*', mode: 'full' },
         { type: 'db', pattern: 'src/db/**/*', mode: 'full' },
@@ -58,7 +60,9 @@ const config = [
           default: 'disallow',
           rules: [
             // UI/HTTP layer: use cases + lib helpers + domain types only.
-            { from: 'app', allow: ['app', 'module', 'lib', 'auth', 'domain'] },
+            { from: 'app', allow: ['app', 'ui', 'module', 'lib', 'auth', 'domain'] },
+            // UI may render domain types; it may not fetch or reach services.
+            { from: 'ui', allow: ['ui', 'domain'] },
             // Application layer: orchestrates services and repositories.
             { from: 'module', allow: ['service', 'db', 'domain', 'lib', 'module'] },
             // (Modules deliberately may NOT import `auth`: use cases receive a
@@ -74,7 +78,7 @@ const config = [
             // The one infrastructure element allowed to reach the database.
             { from: 'auth', allow: ['domain', 'lib', 'auth', 'db'] },
             // Worker is a peer of app: a thin entry point over use cases.
-            { from: 'worker', allow: ['module', 'lib', 'domain', 'service', 'db'] },
+            { from: 'worker', allow: ['worker', 'module', 'lib', 'domain', 'service', 'db'] },
           ],
         },
       ],

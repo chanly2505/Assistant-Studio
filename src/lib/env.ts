@@ -24,6 +24,12 @@ const base = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   YOUTUBE_OAUTH_REDIRECT_URI: z.string().url().optional(),
   YOUTUBE_DATA_DAILY_QUOTA: z.coerce.number().int().positive().default(10_000),
+  /**
+   * OUR ceiling on Analytics API requests per day. Google does not document a
+   * per-request cost for this API; keep this below the project's limit in
+   * Cloud Console → APIs & Services → Quotas.
+   */
+  YOUTUBE_ANALYTICS_DAILY_REQUEST_BUDGET: z.coerce.number().int().positive().default(2_000),
 
   /** 32 raw bytes, base64-encoded. Validated by length after decoding. */
   TOKEN_ENCRYPTION_KEY: z
@@ -44,11 +50,28 @@ const base = z.object({
     .regex(/^\d{1,3}:[A-Za-z0-9+/=]+$/, 'expected "<version>:<base64 key>"')
     .optional(),
 
-  AI_PROVIDER: z.enum(['openai', 'mock']).default('mock'),
+  /**
+   * `openai` — the real provider. `disabled` — AI features answer "not
+   * configured". There is deliberately no fixture/mock provider here: a mock
+   * that returns plausible content would make the product look finished while
+   * doing nothing. Tests intercept the real HTTP calls instead.
+   */
+  AI_PROVIDER: z.enum(['openai', 'disabled']).default('openai'),
   OPENAI_API_KEY: z.string().min(1).optional(),
+  /** High-volume, short outputs: ideas, titles, descriptions. */
+  AI_MODEL_FAST: z.string().min(1).default('gpt-5.6-luna'),
+  /** Long-form reasoning: scripts and content plans. */
+  AI_MODEL_STRONG: z.string().min(1).default('gpt-5.6-sol'),
   AI_DAILY_SPEND_LIMIT_MICROS: z.coerce.number().int().positive().default(50_000_000),
 
   REDIS_URL: z.string().url().optional(),
+  /** Prefix for every Redis key and queue, so environments sharing a server never collide. */
+  REDIS_KEY_PREFIX: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .default('ysa'),
+  /** Jobs the background worker runs at once. Each holds one YouTube request at a time. */
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(32).default(4),
   SENTRY_DSN: z.string().url().optional(),
 
   /** Set by Next.js itself: `phase-production-build` while `next build` runs. */
@@ -87,22 +110,17 @@ const schema = base.superRefine((env, ctx) => {
     needed('TOKEN_ENCRYPTION_KEY', 'encrypts YouTube refresh tokens at rest');
     needed('REDIS_URL', 'rate limiting must be shared across instances');
 
-    if (env.AI_PROVIDER === 'mock') {
+    if (env.AI_PROVIDER === 'openai' && !env.OPENAI_API_KEY) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['AI_PROVIDER'],
-        message: 'AI_PROVIDER=mock is never allowed in production — it returns fixture data',
+        path: ['OPENAI_API_KEY'],
+        message: 'OPENAI_API_KEY is required in production when AI_PROVIDER=openai',
       });
     }
   }
 
-  if (env.AI_PROVIDER === 'openai' && !env.OPENAI_API_KEY) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['OPENAI_API_KEY'],
-      message: 'OPENAI_API_KEY is required when AI_PROVIDER=openai',
-    });
-  }
+  // Outside production a missing key is allowed: the AI features report
+  // CONFIGURATION_MISSING instead of the app refusing to start.
 });
 
 export type Env = z.infer<typeof base>;

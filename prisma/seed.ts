@@ -79,14 +79,17 @@ async function seedDevelopmentUsers(): Promise<void> {
 
   const connection = await prisma.youTubeConnection.upsert({
     where: { userId_googleSub: { userId: activeUser.id, googleSub: 'dev-sub-active' } },
-    update: {},
+    // Also corrects rows seeded by older versions of this file.
+    update: { encryptedRefreshToken: '', status: 'REAUTH_REQUIRED' },
     create: {
       userId: activeUser.id,
       googleSub: 'dev-sub-active',
       googleEmail: 'active@example.test',
-      // Not a real token: Phase 3 writes real AES-256-GCM ciphertext here.
-      // Nothing reads this value in Phase 2.
-      encryptedRefreshToken: 'seed:not-a-real-token',
+      // Not a real grant, so the connection is seeded as REAUTH_REQUIRED: the UI
+      // shows "Reconnect" and the scheduler never tries to sync it. Connect a
+      // real channel from the Channels page to exercise sync.
+      encryptedRefreshToken: '',
+      status: 'REAUTH_REQUIRED',
       scopes: [
         'https://www.googleapis.com/auth/youtube.readonly',
         'https://www.googleapis.com/auth/yt-analytics.readonly',

@@ -20,6 +20,8 @@ import {
 } from '@/services/google/oauth';
 import { getYouTubeService } from '@/services/youtube/youtube.service';
 
+import { enqueueInitialSync } from '@/modules/sync/schedule';
+
 import { primeAccessToken } from './access-token';
 import { reserveYouTubeQuota } from './quota-guard';
 
@@ -223,6 +225,14 @@ async function persistConnection(
   // The access token from the exchange is good for about an hour; the first
   // sync can use it instead of refreshing immediately.
   primeAccessToken(result.connectionId, tokens.accessToken, tokens.expiresInSeconds);
+
+  // First full video sync. Never fails the connect: on a queue outage the
+  // scheduler picks the channel up on its next tick.
+  await enqueueInitialSync(
+    userId,
+    result.channels.map((channel) => channel.id),
+    log,
+  );
 
   log.info(
     { connectionId: result.connectionId, channelCount: result.channels.length },
