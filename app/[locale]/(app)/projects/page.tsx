@@ -11,6 +11,7 @@ import {
   type ProjectStatus,
 } from '@/domain/content/status';
 import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
 import { CreateProjectRequest } from '@/modules/content/inputs';
@@ -48,6 +49,8 @@ export default async function ProjectsPage({
   async function create(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, '/projects?error=errors.tooManyActions'));
     const parsed = CreateProjectRequest.safeParse({ title: formData.get('title') });
     if (!parsed.success) redirect(localePath(locale, '/projects?error=errors.validationFailed'));
     const created = await createProject(current.id, parsed.data);
@@ -58,6 +61,8 @@ export default async function ProjectsPage({
   async function move(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`)))
+      redirect(localePath(locale, '/projects?error=errors.tooManyActions'));
     const projectId = String(formData.get('projectId') ?? '');
     const status = String(formData.get('status') ?? '');
     if (!(PROJECT_STATUSES as readonly string[]).includes(status))

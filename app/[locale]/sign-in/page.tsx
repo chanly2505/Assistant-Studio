@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 
+import { SIGN_IN_LIMIT, actionClientIdentity, guardAction } from '@/lib/api/action-guard';
 import { isGoogleSignInConfigured, signIn } from '@/lib/auth/auth';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { dynamicKeys } from '@/lib/i18n/dynamic-key';
@@ -8,17 +9,23 @@ import { localePath } from '@/lib/i18n/paths';
 
 export const dynamic = 'force-dynamic';
 
-const KNOWN_ERRORS = ['AccessDenied', 'Configuration', 'OAuthAccountNotLinked', 'Verification'];
+const KNOWN_ERRORS = [
+  'AccessDenied',
+  'Configuration',
+  'OAuthAccountNotLinked',
+  'Verification',
+  'TooManyAttempts',
+];
 
 export default async function SignInPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; deleted?: string }>;
 }) {
   const { locale } = await params;
-  const { error } = await searchParams;
+  const { error, deleted } = await searchParams;
   setRequestLocale(locale);
 
   if (await getCurrentUser()) redirect(localePath(locale, '/dashboard'));
@@ -30,6 +37,9 @@ export default async function SignInPage({
 
   async function signInWithGoogle() {
     'use server';
+    if (!(await guardAction(await actionClientIdentity(), SIGN_IN_LIMIT))) {
+      redirect(localePath(locale, '/sign-in?error=TooManyAttempts'));
+    }
     await signIn('google', { redirectTo: localePath(locale, '/dashboard') });
   }
 
@@ -40,6 +50,11 @@ export default async function SignInPage({
         <p className="muted">{t('subtitle')}</p>
       </header>
 
+      {deleted && (
+        <p className="flash flash--ok" role="status">
+          {t('deleted')}
+        </p>
+      )}
       {errorKey && (
         <p className="flash flash--bad" role="alert">
           {dynamicKeys(t)(`error.${errorKey}`)}

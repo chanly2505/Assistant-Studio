@@ -14,6 +14,7 @@ import {
 } from '@/services/google/http';
 
 import type { YouTubeChannelSummary } from './youtube.service';
+import { config } from '@/lib/env';
 
 /**
  * YouTube Data API v3 — the calls implemented so far.
@@ -23,7 +24,7 @@ import type { YouTubeChannelSummary } from './youtube.service';
  * a schema change becomes a production incident.
  */
 
-const API_BASE = 'https://www.googleapis.com/youtube/v3';
+const API_BASE = config.external.youtubeData;
 
 const Thumbnail = z.object({ url: z.string().url() }).partial();
 

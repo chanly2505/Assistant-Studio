@@ -23,6 +23,7 @@ import type {
 } from './ai-service';
 import { JSON_SCHEMAS } from './json-schemas';
 import { buildPrompt, type BuiltPrompt } from './prompts';
+import { config } from '@/lib/env';
 
 /**
  * OpenAI Responses API with strict Structured Outputs.
@@ -34,7 +35,7 @@ import { buildPrompt, type BuiltPrompt } from './prompts';
  * (API data is not used for training by default — OpenAI "Your data" docs.)
  */
 
-const RESPONSES_URL = 'https://api.openai.com/v1/responses';
+const RESPONSES_URL = config.external.openaiResponses;
 
 /** Usage a failed call still incurred — attached to the error as its `cause`. */
 export interface BilledUsage {

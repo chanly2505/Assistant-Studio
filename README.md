@@ -4,12 +4,21 @@ Helps creators plan, write and understand a YouTube channel.
 Architecture and constraints: [`docs/architecture/`](docs/architecture/README.md). Read
 [§12 Constraints & Limitations](docs/architecture/12-constraints-and-limitations.md) first.
 
-**Status:** Phases 1–7 are done: foundation, Google sign-in, YouTube channel connection,
-background sync of videos and statistics, analytics, the AI Studio tools, and content management
-(ideas, projects with versioned titles/descriptions/scripts, status history, calendar), and
-localisation and settings (Home with getting-started steps, Settings, Usage; Khmer, Thai,
-Vietnamese and Chinese as hidden drafts awaiting native review, see
-[`messages/README.md`](messages/README.md)).
+**Status:** Phases 1–9 are done:
+- foundation, Google sign-in, YouTube channel connection
+- background sync of videos and statistics, and analytics
+- the AI Studio tools
+- content management (ideas, projects with versioned assets, status history, calendar)
+- localisation and settings
+- hardening:
+  - a nonce-based CSP
+  - rate limits on every route and form
+  - data export and account deletion
+  - a rehearsed backup restore
+  - load, accessibility and full-journey browser tests
+
+Phase 10 (launch) is gated by Google's verification, not by code. See
+[`docs/RUNBOOK.md`](docs/RUNBOOK.md) for the launch checklist and operating procedures.
 
 **Just want to run it?** Follow [`docs/RUNNING.md`](docs/RUNNING.md).
 
@@ -42,7 +51,8 @@ pnpm worker                     # background sync (separate terminal)
 |---|---|
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm verify` | typecheck + lint + tests (the CI gate) |
-| `pnpm test:e2e` | Playwright in your installed Chrome (own port 3100, build folder and database) |
+| `pnpm test:e2e` | Playwright in your installed Chrome against a production build, with local fakes of Google and OpenAI (own port 3100, build folder and database) |
+| `pnpm db:backup` / `db:restore-check` / `db:rehearse-restore` | backup, and a restore verified table by table ([runbook](docs/RUNBOOK.md)) |
 | `pnpm test` / `test:coverage` | Vitest (real PostgreSQL, Prisma never mocked) |
 | `pnpm lint` | includes architectural boundary rules |
 | `pnpm format` / `format:check` | Prettier |

@@ -32,7 +32,7 @@ import { buildChannelContext } from './context-builder';
  *   1. authorise        the channel, if given, belongs to the caller
  *   2. cache            an identical successful request in the last 24 h is
  *                       returned as-is: no provider call, no allowance used
- *   3. spend breaker    platform-wide daily AI spend cap
+ *   3. (reserved for the spend breaker, which now runs atomically in step 5)
  *   4. allowance        ONE atomic reservation against the monthly plan limit
  *   5. record PENDING   before the call, so a crash still leaves a record
  *   6. provider call    validated structured output (one repair retry inside)
@@ -126,18 +126,6 @@ export async function runGeneration<T>(job: Job<T>): Promise<Result<GenerationOu
     });
   }
 
-  /* 3. Spend breaker ---------------------------------------------------- */
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const spentToday = await aiGenerationRepository.spendSince(dayStart);
-  if (spentToday >= env.AI_DAILY_SPEND_LIMIT_MICROS) {
-    log.error({ spentToday }, 'AI daily spend limit reached; refusing new generations');
-    return err(
-      new AppError('AI_UNAVAILABLE', {
-        detail: `daily AI spend limit reached (${spentToday} micros)`,
-      }),
-    );
-  }
-
   /* 4. Allowance -------------------------------------------------------- */
   const count = await aiUsageRepository.reserve(job.userId, job.feature, periodStart, limit);
   if (count === null) {
@@ -149,18 +137,33 @@ export async function runGeneration<T>(job: Job<T>): Promise<Result<GenerationOu
     );
   }
 
-  /* 5. Record PENDING --------------------------------------------------- */
-  const generationId = await aiGenerationRepository.createPending({
-    userId: job.userId,
-    channelId: job.channelId ?? null,
-    feature: job.feature,
-    provider: 'openai',
-    model,
-    promptVersion: config.promptVersion,
-    locale: job.locale,
-    inputHash,
-    inputJson: job.input as Prisma.InputJsonValue,
-  });
+  /* 5. Spend breaker + PENDING record, atomically ----------------------- */
+  // The worst-case cost is reserved against today's cap in the same step that
+  // creates the record, so simultaneous requests cannot all squeeze under it.
+  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const generationId = await aiGenerationRepository.createPendingWithinBudget(
+    {
+      userId: job.userId,
+      channelId: job.channelId ?? null,
+      feature: job.feature,
+      provider: 'openai',
+      model,
+      promptVersion: config.promptVersion,
+      locale: job.locale,
+      inputHash,
+      inputJson: job.input as Prisma.InputJsonValue,
+    },
+    {
+      since: dayStart,
+      limitMicros: env.AI_DAILY_SPEND_LIMIT_MICROS,
+      reserveMicros: maxCostMicros(model, config.maxOutputTokens),
+    },
+  );
+  if (generationId === null) {
+    await aiUsageRepository.refund(job.userId, job.feature, periodStart);
+    log.error('AI daily spend limit reached; refusing new generations');
+    return err(new AppError('AI_UNAVAILABLE', { detail: 'daily AI spend limit reached' }));
+  }
 
   /* 6. Call -------------------------------------------------------------- */
   const startedAt = Date.now();

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Field } from '@/components/forms/field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { SUPPORTED_LOCALES } from '@/domain/ai/types';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { LOCALE_LABELS } from '@/lib/i18n/routing';
 import { dynamicKeys } from '@/lib/i18n/dynamic-key';
@@ -19,6 +20,7 @@ import {
   generateTitles,
 } from '@/modules/ai/generate';
 import { getUsage, listGenerations } from '@/modules/ai/history';
+import { AI_RATE_LIMITS } from '@/modules/ai/limits';
 import { getProject } from '@/modules/content/projects';
 import { getUserSettings } from '@/modules/settings/settings';
 import {
@@ -100,6 +102,13 @@ export default async function StudioPage({
     'use server';
     const current = await requireUser(locale);
     const selected = String(formData.get('tool') ?? '') as Tool;
+    // Same counters as the API routes, so the form and the API share one limit.
+    if (
+      (TOOLS as readonly string[]).includes(selected) &&
+      !(await guardAction(`user:${current.id}`, AI_RATE_LIMITS[selected]))
+    ) {
+      redirect(localePath(locale, `/studio?tool=${selected}&error=RATE_LIMITED`));
+    }
     const projectId = String(formData.get('project') ?? '');
     const forProject = /^[a-z0-9]{1,64}$/.test(projectId) ? `project=${projectId}` : '';
     const fields = fieldsOf(formData);

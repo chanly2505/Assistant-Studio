@@ -1,10 +1,12 @@
+import { HttpResponse, delay, http } from 'msw';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { allowancePeriodStart } from '@/domain/ai/features';
+import { FEATURES, allowancePeriodStart } from '@/domain/ai/features';
 import { generateIdeas, generateScript, generateTitles } from '@/modules/ai/generate';
 import { getUsage, saveIdea } from '@/modules/ai/history';
 import { sweepAbandonedGenerations } from '@/modules/ai/run-generation';
 import { setAIService } from '@/services/ai';
+import { maxCostMicros } from '@/services/ai/pricing';
 
 import {
   createTestChannel,
@@ -309,6 +311,72 @@ describe('allowance, cache and spend limits', () => {
     if (!result.ok) expect(result.error.code).toBe('AI_UNAVAILABLE');
     expect(callsTo(OPENAI_URL)).toHaveLength(0);
     expect(await usedThisMonth(user.id, 'IDEAS')).toBe(0);
+  });
+
+  // Load-tested: a burst of simultaneous requests must not overshoot the daily
+  // cap. Each in-flight call reserves its worst-case cost before it starts, so
+  // with room for exactly three worst-case calls, exactly three go ahead.
+  it('holds the daily spend cap under a burst of simultaneous requests', async () => {
+    const worstCase = maxCostMicros('gpt-5.6-luna', FEATURES.IDEAS.maxOutputTokens);
+    const roomFor = 3;
+    const seed = await userWithLimits();
+    await testPrisma.aIGeneration.create({
+      data: {
+        userId: seed.id,
+        feature: 'SCRIPT',
+        provider: 'openai',
+        model: 'gpt-5.6-sol',
+        promptVersion: 'script.v1',
+        inputHash: 'already-spent',
+        status: 'OK',
+        costMicros: BigInt(50_000_000 - worstCase * roomFor - 1),
+      },
+    });
+    // A slow provider keeps all twenty in flight at once. (A fast one lets
+    // early finishers swap their worst-case reservation for the real, lower
+    // cost and free budget for later requests — correct, but it would hide
+    // whether the reservation itself holds.)
+    googleServer.use(
+      http.post(OPENAI_URL, async () => {
+        await delay(400);
+        return HttpResponse.json({
+          status: 'completed',
+          output: [
+            {
+              type: 'message',
+              role: 'assistant',
+              content: [{ type: 'output_text', text: JSON.stringify(validOutputs.IDEAS) }],
+            },
+          ],
+          usage: {
+            input_tokens: 1_000,
+            input_tokens_details: { cached_tokens: 0 },
+            output_tokens: 500,
+            total_tokens: 1_500,
+          },
+        });
+      }),
+    );
+
+    // Twenty different users, so no one's monthly allowance is what stops them.
+    const users = await Promise.all(Array.from({ length: 20 }, () => userWithLimits()));
+    const results = await Promise.all(
+      users.map((u, i) =>
+        generateIdeas({ userId: u.id }, { topic: `burst number ${i}`, count: 3, locale: 'en' }),
+      ),
+    );
+
+    const succeeded = results.filter((r) => r.ok);
+    expect(succeeded).toHaveLength(roomFor);
+    expect(
+      results.filter((r) => !r.ok).every((r) => !r.ok && r.error.code === 'AI_UNAVAILABLE'),
+    ).toBe(true);
+    expect(callsTo(OPENAI_URL)).toHaveLength(roomFor);
+    // Refused requests used no allowance.
+    const counted = await Promise.all(users.map((u) => usedThisMonth(u.id, 'IDEAS')));
+    expect(counted.reduce((a, b) => a + b, 0)).toBe(roomFor);
+    const spent = await testPrisma.aIGeneration.aggregate({ _sum: { costMicros: true } });
+    expect(Number(spent._sum.costMicros)).toBeLessThanOrEqual(50_000_000);
   });
 
   it('reports usage per feature', async () => {

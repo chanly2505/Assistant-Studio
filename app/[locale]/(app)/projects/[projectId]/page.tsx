@@ -10,6 +10,7 @@ import { ASSET_KINDS, ASSET_MAX_CHARS, charCount, type AssetKind } from '@/domai
 import { PROJECT_STATUSES, type ProjectStatus } from '@/domain/content/status';
 import { toLocalDateTimeInput } from '@/domain/content/time';
 import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { LOCALE_LABELS } from '@/lib/i18n/routing';
 import { localePath } from '@/lib/i18n/paths';
@@ -69,6 +70,7 @@ export default async function ProjectPage({
   async function saveDetails(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     const parsed = UpdateProjectRequest.safeParse({
       title: formData.get('title'),
       notes: formData.get('notes') ?? '',
@@ -84,6 +86,7 @@ export default async function ProjectPage({
   async function changeStatus(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     const parsed = UpdateProjectRequest.safeParse({
       status: formData.get('status'),
       statusNote: formData.get('statusNote') || undefined,
@@ -96,6 +99,7 @@ export default async function ProjectPage({
   async function addVersion(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     const parsed = AddAssetRequest.safeParse({
       kind: formData.get('kind'),
       body: formData.get('body'),
@@ -108,6 +112,7 @@ export default async function ProjectPage({
   async function select(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     const selected = await selectAsset(
       current.id,
       projectId,
@@ -119,6 +124,7 @@ export default async function ProjectPage({
   async function remove() {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     const removed = await deleteProject(current.id, projectId);
     redirect(
       removed.ok ? localePath(locale, '/projects') : `${self}?error=${removed.error.messageKey}`,
@@ -128,6 +134,7 @@ export default async function ProjectPage({
   async function useZone(formData: FormData) {
     'use server';
     const current = await requireUser(locale);
+    if (!(await guardAction(`user:${current.id}`))) redirect(`${self}?error=errors.tooManyActions`);
     const saved = await setTimeZone(current.id, String(formData.get('timezone') ?? ''));
     redirect(saved.ok ? self : `${self}?error=${saved.error.messageKey}`);
   }
@@ -166,7 +173,11 @@ export default async function ProjectPage({
       </header>
 
       <ErrorFlash error={query.error} />
-      {query.saved && <p className="flash flash--ok">{tc('saved')}</p>}
+      {query.saved && (
+        <p className="flash flash--ok" role="status">
+          {tc('saved')}
+        </p>
+      )}
 
       <div className="split">
         <section className="card">

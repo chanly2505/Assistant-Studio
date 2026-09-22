@@ -36,8 +36,10 @@
       "Configuration": "Sign-in is misconfigured on the server. Please try again later.",
       "OAuthAccountNotLinked": "This email is already linked to a different sign-in method.",
       "Verification": "That sign-in link has expired. Please try again.",
+      "TooManyAttempts": "Too many sign-in attempts. Please wait 15 minutes and try again.",
       "Default": "We couldn't sign you in. Please try again."
-    }
+    },
+    "deleted": "Your account has been deleted. Thank you for trying YouTube Studio Assistant."
   },
   "channels": {
     "title": "Your channels",
@@ -147,6 +149,10 @@
     },
     "settings": {
       "languageUnavailable": "That language isn't available yet."
+    },
+    "tooManyActions": "You're doing that too often. Please wait a minute and try again.",
+    "account": {
+      "confirmMismatch": "The email address you typed doesn't match your account."
     }
   },
   "common": {
@@ -549,7 +555,17 @@
       "connect": "Connect a YouTube channel first",
       "edit": "Describe “{channel}”"
     },
-    "usageLink": "See what you have used this month"
+    "usageLink": "See what you have used this month",
+    "data": {
+      "heading": "Your data",
+      "exportIntro": "Download everything this app stores about you, as one file (JSON). Passwords and access keys are never included.",
+      "export": "Download my data",
+      "deleteHeading": "Delete your account",
+      "deleteIntro": "This permanently deletes your account: your ideas, projects, calendar, AI history and the YouTube data we copied. We also remove this app's access to your YouTube channels at Google. This cannot be undone.",
+      "confirmLabel": "Type your email address ({email}) to confirm",
+      "delete": "Delete my account permanently",
+      "deleting": "Deleting…"
+    }
   },
   "channelSettings": {
     "back": "Settings",

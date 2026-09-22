@@ -7,10 +7,12 @@ import { Field } from '@/components/forms/field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TimeZonePrompt } from '@/components/forms/time-zone-prompt';
 import { SUPPORTED_LOCALES } from '@/domain/ai/types';
+import { guardAction } from '@/lib/api/action-guard';
 import { requireUser } from '@/lib/auth/current-user';
 import { localePath } from '@/lib/i18n/paths';
 import { AVAILABLE_LOCALES, LOCALE_LABELS, isDraftLocale } from '@/lib/i18n/routing';
 import { listChannels } from '@/modules/channels/list-channels';
+import { deleteAccount } from '@/modules/account/account';
 import { UpdateUserSettingsRequest } from '@/modules/settings/inputs';
 import { getUserSettings, updateUserSettings } from '@/modules/settings/settings';
 
@@ -47,6 +49,8 @@ export default async function SettingsPage({
   async function save(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`)))
+      redirect(localePath(locale, '/settings?error=errors.tooManyActions'));
     const parsed = UpdateUserSettingsRequest.safeParse({
       locale: formData.get('locale') ?? undefined,
       timezone: formData.get('timezone') ?? undefined,
@@ -63,6 +67,8 @@ export default async function SettingsPage({
   async function useZone(formData: FormData) {
     'use server';
     const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`)))
+      redirect(localePath(locale, '/settings?error=errors.tooManyActions'));
     const saved = await updateUserSettings(me.id, {
       timezone: String(formData.get('timezone') ?? ''),
     });
@@ -72,6 +78,19 @@ export default async function SettingsPage({
         saved.ok ? '/settings?saved=1' : `/settings?error=${saved.error.messageKey}`,
       ),
     );
+  }
+
+  async function removeAccount(formData: FormData) {
+    'use server';
+    const me = await requireUser(locale);
+    if (!(await guardAction(`user:${me.id}`))) {
+      redirect(localePath(locale, '/settings?error=errors.tooManyActions#data'));
+    }
+    const deleted = await deleteAccount(me.id, String(formData.get('confirmEmail') ?? ''));
+    if (!deleted.ok)
+      redirect(localePath(locale, `/settings?error=${deleted.error.messageKey}#data`));
+    // The session went with the account; the sign-in page confirms it.
+    redirect(localePath(locale, '/sign-in?deleted=1'));
   }
 
   return (
@@ -170,6 +189,40 @@ export default async function SettingsPage({
       <p className="small">
         <Link href={localePath(locale, '/usage')}>{t('usageLink')}</Link>
       </p>
+
+      <section className="card" id="data" aria-labelledby="data-heading">
+        <h2 id="data-heading">{t('data.heading')}</h2>
+        <p>{t('data.exportIntro')}</p>
+        <p>
+          {/* A plain link: the browser downloads the file the route returns. */}
+          <a className="button" href="/api/v1/account/export" download>
+            {t('data.export')}
+          </a>
+        </p>
+      </section>
+
+      <section className="card card--danger" aria-labelledby="delete-heading">
+        <h2 id="delete-heading">{t('data.deleteHeading')}</h2>
+        <p>{t('data.deleteIntro')}</p>
+        <form action={removeAccount} className="form">
+          <Field label={t('data.confirmLabel', { email: current.email })}>
+            <input
+              name="confirmEmail"
+              type="email"
+              required
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </Field>
+          <div className="form__actions">
+            <SubmitButton
+              label={t('data.delete')}
+              pendingLabel={t('data.deleting')}
+              className="button button--danger"
+            />
+          </div>
+        </form>
+      </section>
     </main>
   );
 }

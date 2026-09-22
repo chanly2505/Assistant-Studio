@@ -8,6 +8,7 @@ import type { SecretString } from '@/domain/shared/secret';
 import { describeShape, googleRequest } from '@/services/google/http';
 
 import { classifyYouTubeError } from './youtube-data.client';
+import { config } from '@/lib/env';
 
 /**
  * YouTube Analytics API v2 — youtubeAnalytics.reports.query.
@@ -21,7 +22,7 @@ import { classifyYouTubeError } from './youtube-data.client';
  * it, and this code does not rely on undocumented combinations.
  */
 
-const ENDPOINT = 'https://youtubeanalytics.googleapis.com/v2/reports';
+const ENDPOINT = config.external.youtubeAnalytics;
 
 const ResultTable = z.object({
   kind: z.literal('youtubeAnalytics#resultTable').optional(),

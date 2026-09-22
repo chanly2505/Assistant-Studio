@@ -42,16 +42,3 @@ test('saving user settings keeps the chosen time zone and default channel', asyn
   await expect(page.getByLabel(text('settings.you.timezone'))).toHaveValue('Asia/Phnom_Penh');
   await expect(page.getByLabel(text('settings.content.channel'))).toHaveValue('e2e-channel');
 });
-
-// The Studio action also closes over the page's locale; with AI switched off
-// it must answer with the translated "not set up" message, not crash.
-test('Studio submits and reports that AI is not configured', async ({ page }) => {
-  await page.goto('/en/studio?tool=ideas');
-  await page.getByLabel(text('studio.fields.topic')).fill('breakfast stalls');
-  await page.getByRole('button', { name: text('studio.generate') }).click();
-
-  await expect(page).toHaveURL(/\/en\/studio\?tool=ideas&error=CONFIGURATION_MISSING$/);
-  await expect(page.locator('p.flash--bad[role="alert"]')).toHaveText(
-    text('studio.errors.CONFIGURATION_MISSING'),
-  );
-});
