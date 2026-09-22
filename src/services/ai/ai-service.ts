@@ -1,7 +1,8 @@
 import 'server-only';
 
+import type { Logger } from 'pino';
+
 import type {
-  AIResult,
   ContentIdeasOutput,
   ContentPlanOutput,
   DescriptionOutput,
@@ -11,12 +12,17 @@ import type {
 } from '@/domain/ai/types';
 
 /**
- * The AI abstraction. Nothing outside this folder knows which provider is in use.
+ * The AI abstraction. Nothing outside this folder knows which provider is used.
  * docs/architecture/07-ai-architecture.md §7.1
  *
- * `channelContext` is produced exclusively by AIContextBuilder (Phase 6) and
- * carries aggregates, never raw YouTube API payloads — the compliance boundary
- * described in docs/architecture/12 §F.
+ * A provider turns a typed input into a VALIDATED typed output and reports what
+ * it cost in tokens. Everything with state — allowances, the spend breaker,
+ * caching, the AIGeneration record, persistence — belongs to the application
+ * layer (src/modules/ai), which is the only caller.
+ *
+ * `channelContext` comes exclusively from the context builder in
+ * src/modules/ai/context-builder.ts and carries aggregates, never raw YouTube
+ * payloads — the compliance boundary in docs/architecture/12 §F.
  */
 
 export interface ChannelContext {
@@ -26,7 +32,9 @@ export interface ChannelContext {
   keywords?: string[];
   postingCadence?: string;
   medianDurationSeconds?: number;
-  /** Titles with performance expressed relative to the channel median, never raw counts. */
+  /** 0..1 — share of recent uploads that are 3 min or less (a length heuristic). */
+  shortFormShare?: number;
+  /** Titles with performance relative to the channel median — never raw counts. */
   topTitles?: Array<{ title: string; relativePerformance: number }>;
 }
 
@@ -62,10 +70,40 @@ export interface PlanInput extends BaseAIInput {
   weeks: number;
 }
 
+export interface TokenUsage {
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  /** False when the provider did not report usage; cost is then unknown, not 0. */
+  reported: boolean;
+}
+
+export interface ProviderResult<T> {
+  data: T;
+  model: string;
+  promptVersion: string;
+  usage: TokenUsage;
+  /** Total provider round trips, including a repair retry. */
+  attempts: number;
+}
+
+export interface CallOptions {
+  log?: Logger;
+}
+
 export interface AIService {
-  generateContentIdeas(input: IdeasInput): Promise<AIResult<ContentIdeasOutput>>;
-  generateTitles(input: TitlesInput): Promise<AIResult<TitlesOutput>>;
-  generateDescription(input: DescriptionInput): Promise<AIResult<DescriptionOutput>>;
-  generateScript(input: ScriptInput): Promise<AIResult<ScriptOutput>>;
-  generateContentPlan(input: PlanInput): Promise<AIResult<ContentPlanOutput>>;
+  generateContentIdeas(
+    input: IdeasInput,
+    options?: CallOptions,
+  ): Promise<ProviderResult<ContentIdeasOutput>>;
+  generateTitles(input: TitlesInput, options?: CallOptions): Promise<ProviderResult<TitlesOutput>>;
+  generateDescription(
+    input: DescriptionInput,
+    options?: CallOptions,
+  ): Promise<ProviderResult<DescriptionOutput>>;
+  generateScript(input: ScriptInput, options?: CallOptions): Promise<ProviderResult<ScriptOutput>>;
+  generateContentPlan(
+    input: PlanInput,
+    options?: CallOptions,
+  ): Promise<ProviderResult<ContentPlanOutput>>;
 }

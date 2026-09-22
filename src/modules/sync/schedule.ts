@@ -13,6 +13,7 @@ import { quotaDayKey, quotaMode } from '@/domain/youtube/quota';
 import { getRateLimiter, rateLimitError } from '@/lib/api/rate-limit';
 import { env } from '@/lib/env';
 import { logger as rootLogger } from '@/lib/logger';
+import { sweepAbandonedGenerations } from '@/modules/ai/run-generation';
 import { getJobQueue, type JobName, type JobPayload } from '@/services/queue';
 
 /**
@@ -138,6 +139,11 @@ export async function scheduleDueSyncs(params: { now?: Date; log?: Logger } = {}
       enqueued += 1;
     }
   }
+
+  // Housekeeping on the same hourly clock: generations left PENDING by a
+  // process that died mid-call get their allowance refunded.
+  const abandonedGenerations = await sweepAbandonedGenerations(now);
+  if (abandonedGenerations) log.warn({ abandonedGenerations }, 'swept abandoned AI generations');
 
   log.info({ considered: channels.length, enqueued }, 'schedule tick');
   return { considered: channels.length, enqueued, deferredForQuota: false };

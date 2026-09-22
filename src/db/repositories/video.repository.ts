@@ -151,6 +151,29 @@ export const videoRepository = {
   },
 
   /**
+   * Recent live uploads with their latest view count — raw material for the AI
+   * context builder, which reduces it to relative figures before any prompt.
+   */
+  async recentWithLatestViews(channelId: string, since: Date, limit: number) {
+    const rows = await prisma.youTubeVideo.findMany({
+      where: { channelId, deletedFromYouTubeAt: null, publishedAt: { gte: since } },
+      orderBy: { publishedAt: 'desc' },
+      take: limit,
+      select: {
+        title: true,
+        publishedAt: true,
+        durationSeconds: true,
+        isShortForm: true,
+        statsSnapshots: { orderBy: { capturedAt: 'desc' }, take: 1, select: { viewCount: true } },
+      },
+    });
+    return rows.map(({ statsSnapshots, ...video }) => ({
+      ...video,
+      views: statsSnapshots[0] ? Number(statsSnapshots[0].viewCount) : null,
+    }));
+  },
+
+  /**
    * Videos worth a daily analytics series: the HOT tier (recent, or a top
    * performer), newest first. Capped by the caller.
    */

@@ -338,3 +338,116 @@ export function analyticsError(status: number, reason: string) {
     HttpResponse.json({ error: { code: status, errors: [{ reason }] } }, { status }),
   );
 }
+
+/* ---------------------------------- OpenAI ---------------------------------- */
+// Lives beside the Google fakes so every suite shares ONE MSW server (and its
+// onUnhandledRequest: 'error' guard).
+
+export const OPENAI_URL = 'https://api.openai.com/v1/responses';
+
+export type FakeOpenAIReply =
+  | { kind: 'json'; value: unknown; usage?: { input: number; output: number; cached?: number } }
+  | { kind: 'text'; text: string; usage?: { input: number; output: number } }
+  | { kind: 'refusal' }
+  | { kind: 'incomplete'; reason: string }
+  | { kind: 'http'; status: number; body?: unknown };
+
+/** Bodies of every request the fake received, parsed. */
+export const openaiRequests: Array<Record<string, unknown>> = [];
+
+/**
+ * Answers /v1/responses from a script: the first request gets replies[0], the
+ * next replies[1]… The last reply repeats once the script runs out.
+ */
+export function openai(replies: FakeOpenAIReply[]) {
+  let index = 0;
+  return http.post(OPENAI_URL, async ({ request }) => {
+    openaiRequests.push((await request.json()) as Record<string, unknown>);
+    const reply = replies[Math.min(index, replies.length - 1)] as FakeOpenAIReply;
+    index += 1;
+
+    const usage = (u?: { input: number; output: number; cached?: number }) => ({
+      input_tokens: u?.input ?? 1_000,
+      input_tokens_details: { cached_tokens: u?.cached ?? 0 },
+      output_tokens: u?.output ?? 500,
+      total_tokens: (u?.input ?? 1_000) + (u?.output ?? 500),
+    });
+    const message = (content: unknown[]) => [{ type: 'message', role: 'assistant', content }];
+
+    switch (reply.kind) {
+      case 'json':
+        return HttpResponse.json({
+          status: 'completed',
+          output: message([{ type: 'output_text', text: JSON.stringify(reply.value) }]),
+          usage: usage(reply.usage),
+        });
+      case 'text':
+        return HttpResponse.json({
+          status: 'completed',
+          output: message([{ type: 'output_text', text: reply.text }]),
+          usage: usage(reply.usage),
+        });
+      case 'refusal':
+        return HttpResponse.json({
+          status: 'completed',
+          output: message([{ type: 'refusal', refusal: "I can't help with that." }]),
+          usage: usage({ input: 800, output: 20 }),
+        });
+      case 'incomplete':
+        return HttpResponse.json({
+          status: 'incomplete',
+          incomplete_details: { reason: reply.reason },
+          output: message([{ type: 'output_text', text: '{"ideas":[{"title":"trunc' }]),
+          usage: usage({ input: 900, output: 3_000 }),
+        });
+      case 'http':
+        return HttpResponse.json(reply.body ?? { error: { code: 'server_error' } }, {
+          status: reply.status,
+        });
+    }
+  });
+}
+
+export function resetOpenAI(): void {
+  openaiRequests.length = 0;
+}
+
+/** Schema-valid outputs, one per feature. */
+export const validOutputs = {
+  IDEAS: {
+    ideas: Array.from({ length: 3 }, (_, i) => ({
+      title: `Idea number ${i + 1}`,
+      angle: 'Follow a vendor from setup to the lunch rush.',
+      hook: 'Most visitors never see this.',
+      format: 'vlog',
+      keywords: ['street food', 'phnom penh'],
+      rationale: 'Behind-the-scenes content suits a local-food channel.',
+    })),
+  },
+  TITLES: {
+    titles: Array.from({ length: 5 }, (_, i) => ({
+      text: `A perfectly good title ${i + 1}`,
+      style: 'direct',
+      reasoning: 'Clear and specific.',
+      estimatedStrength: 3,
+    })),
+  },
+  DESCRIPTION: {
+    description: 'A '.repeat(40) + 'description long enough to be useful.',
+    hashtags: ['#streetfood'],
+    chapters: null,
+  },
+  SCRIPT: {
+    hook: 'You have walked past this stall a hundred times.',
+    sections: [{ heading: 'Setup', body: 'At four in the morning the charcoal is already lit.' }],
+    callToAction: 'Subscribe for the next market.',
+    estimatedDurationSeconds: 480,
+  },
+  PLAN: {
+    summary: 'Four weeks building a local-food audience.',
+    cadence: 'Two videos per week',
+    entries: [
+      { week: 1, title: 'Best breakfast stalls', format: 'long', goal: 'Establish the niche' },
+    ],
+  },
+} as const;

@@ -15,9 +15,11 @@ import { logExternalCall, logger as rootLogger } from '@/lib/logger';
  */
 
 export type GoogleApi = 'google_oauth' | 'youtube_data' | 'youtube_analytics';
+/** The same helper serves OpenAI: one place for timeouts, failures and logging. */
+export type ExternalApi = GoogleApi | 'openai';
 
 export interface GoogleRequest {
-  api: GoogleApi;
+  api: ExternalApi;
   operation: string;
   url: string;
   init?: RequestInit;
@@ -56,7 +58,7 @@ export async function googleRequest(request: GoogleRequest): Promise<GoogleRespo
     throw new AppError('UPSTREAM_UNAVAILABLE', {
       detail: `${request.api}.${request.operation} ${timedOut ? 'timed out' : 'network error'}`,
       cause,
-      params: { service: 'google' },
+      params: { service: request.api === 'openai' ? 'openai' : 'google' },
     });
   } finally {
     clearTimeout(timer);
@@ -120,3 +122,6 @@ export function describeShape(body: unknown): string {
   if (body === null || typeof body !== 'object') return typeof body;
   return `{${Object.keys(body as object).join(',')}}`;
 }
+
+/** Alias for non-Google callers, so call sites read correctly. */
+export const externalRequest = googleRequest;

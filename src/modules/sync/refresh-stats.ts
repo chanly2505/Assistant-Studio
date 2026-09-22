@@ -139,6 +139,11 @@ export async function refreshChannelStats(params: {
     await syncJobRepository.recordStatsSync(channel.id, now);
     context.addItems(1);
 
-    return { subscriberCount: current.subscriberCount, videoCount: current.videoCount };
+    // Returned to BullMQ, which stores it as JSON: no BigInt. Subscriber
+    // counts are far below Number.MAX_SAFE_INTEGER.
+    return {
+      subscriberCount: current.subscriberCount === null ? null : Number(current.subscriberCount),
+      videoCount: current.videoCount,
+    };
   });
 }

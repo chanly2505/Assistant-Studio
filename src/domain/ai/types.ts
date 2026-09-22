@@ -71,7 +71,9 @@ export const DescriptionOutput = z
         }),
       )
       .max(30)
-      .optional(),
+      // Nullish, not just optional: OpenAI strict mode requires every field, so
+      // "no chapters" arrives as null.
+      .nullish(),
   })
   .strict();
 

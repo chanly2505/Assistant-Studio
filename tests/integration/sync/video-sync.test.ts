@@ -11,7 +11,7 @@ import { syncChannelVideos } from '@/modules/sync/sync-channel-videos';
 import { listVideos } from '@/modules/videos/list-videos';
 import { clearAccessTokenCache, primeAccessToken } from '@/modules/youtube/access-token';
 import { getTokenVault } from '@/services/crypto';
-import { processJob } from '@/worker/processor';
+import { processJob, toJobResult } from '@/worker/processor';
 import { logger } from '@/lib/logger';
 
 import { createTestUser, disconnectDatabase, resetDatabase, testPrisma } from '../../helpers/db';
@@ -591,6 +591,29 @@ describe('worker processor', () => {
       logger,
     );
     expect(result).toMatchObject({ created: 3 });
+  });
+
+  // Regression: channel.stats returned a BigInt subscriber count; BullMQ's
+  // JSON.stringify of the result threw AFTER the snapshot was written, so a
+  // successful job was marked failed and retried.
+  it('returns a result the queue can store as JSON (channel.stats)', async () => {
+    const { user, channel } = await connectedChannel();
+    googleServer.use(google.channels([channelItem({ id: channel.youtubeChannelId })]));
+
+    const result = await processJob(
+      'channel.stats',
+      { userId: user.id, channelId: channel.id, trigger: 'schedule' },
+      1,
+      logger,
+    );
+    expect(() => JSON.stringify(result)).not.toThrow();
+    expect(result).toMatchObject({ subscriberCount: expect.any(Number) });
+  });
+
+  it('makes any job result JSON-safe, turning BigInt into a string', () => {
+    const safe = toJobResult({ views: 12n, nested: [{ likes: 3n }], ok: true });
+    expect(JSON.stringify(safe)).toBe('{"views":"12","nested":[{"likes":"3"}],"ok":true}');
+    expect(toJobResult(undefined)).toBeUndefined();
   });
 
   it('does not retry permanent failures', async () => {

@@ -566,3 +566,148 @@ body {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* ---- Phase 6: Studio forms and results ---- */
+
+.topbar__nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.form__field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.form__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form__hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.form input:not([type='checkbox']),
+.form textarea,
+.form select {
+  font: inherit;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.form input:focus-visible,
+.form textarea:focus-visible,
+.form select:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.form__check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.history a {
+  overflow-wrap: anywhere;
+}
+
+.result-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-list--plain li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-list--plain li:last-child {
+  border-bottom: 0;
+}
+
+.card .result__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.result__facts {
+  display: grid;
+  grid-template-columns: minmax(7rem, max-content) 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0.75rem 0;
+}
+
+.result__facts dt {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.result__facts dd {
+  margin: 0;
+}
+
+.result__text {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  overflow-wrap: anywhere;
+}
+
+.result__prose {
+  white-space: pre-wrap;
+  margin-top: 0;
+}
+
+@media (max-width: 30rem) {
+  .result__facts {
+    grid-template-columns: 1fr;
+  }
+}

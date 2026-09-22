@@ -35,6 +35,7 @@ export default async function AppLayout({
       <header className="topbar">
         <nav className="topbar__nav" aria-label="Main">
           <Link href={localePath(locale, '/channels')}>{t('channels')}</Link>
+          <Link href={localePath(locale, '/studio')}>{t('studio')}</Link>
         </nav>
         <div className="topbar__user">
           <span className="muted">{t('signedInAs', { email: user.email })}</span>

@@ -37,32 +37,49 @@ export async function processJob(
   }
 
   try {
-    switch (jobName) {
-      case 'channel.videos': {
-        const payload = JOB_SCHEMAS['channel.videos'].parse(data);
-        return (await syncChannelVideos({ ...payload, attempt, log })).result;
-      }
-      case 'channel.video-stats': {
-        const payload = JOB_SCHEMAS['channel.video-stats'].parse(data);
-        return (await refreshVideoStats({ ...payload, attempt, log })).result;
-      }
-      case 'channel.stats': {
-        const payload = JOB_SCHEMAS['channel.stats'].parse(data);
-        return (await refreshChannelStats({ ...payload, attempt, log })).result;
-      }
-      case 'channel.analytics': {
-        const payload = JOB_SCHEMAS['channel.analytics'].parse(data);
-        return (await syncAnalytics({ ...payload, attempt, log })).result;
-      }
-      case 'schedule.tick':
-        return await scheduleDueSyncs({ log });
-    }
+    return toJobResult(await run(jobName, data, attempt, log));
   } catch (thrown) {
     const error = toAppError(thrown);
     if (PERMANENT_ERROR_CODES.has(error.code)) {
       throw new UnrecoverableError(`${error.code}: ${error.detail ?? ''}`.trim());
     }
     throw error;
+  }
+}
+
+/**
+ * BullMQ stores a job's return value with JSON.stringify, AFTER the work is
+ * committed. A BigInt there would fail an already-successful job and make
+ * BullMQ retry it (duplicate snapshots, wasted quota), so every result is made
+ * JSON-safe here: BigInt → string.
+ */
+export function toJobResult(value: unknown): unknown {
+  if (value === undefined) return undefined;
+  return JSON.parse(
+    JSON.stringify(value, (_key, v: unknown) => (typeof v === 'bigint' ? v.toString() : v)),
+  );
+}
+
+async function run(jobName: JobName, data: unknown, attempt: number, log: Logger) {
+  switch (jobName) {
+    case 'channel.videos': {
+      const payload = JOB_SCHEMAS['channel.videos'].parse(data);
+      return (await syncChannelVideos({ ...payload, attempt, log })).result;
+    }
+    case 'channel.video-stats': {
+      const payload = JOB_SCHEMAS['channel.video-stats'].parse(data);
+      return (await refreshVideoStats({ ...payload, attempt, log })).result;
+    }
+    case 'channel.stats': {
+      const payload = JOB_SCHEMAS['channel.stats'].parse(data);
+      return (await refreshChannelStats({ ...payload, attempt, log })).result;
+    }
+    case 'channel.analytics': {
+      const payload = JOB_SCHEMAS['channel.analytics'].parse(data);
+      return (await syncAnalytics({ ...payload, attempt, log })).result;
+    }
+    case 'schedule.tick':
+      return await scheduleDueSyncs({ log });
   }
 }
 

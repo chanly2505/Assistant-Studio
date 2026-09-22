@@ -20,6 +20,7 @@ export const ERROR_CODES = [
   'AI_LIMIT_REACHED',
   'AI_INVALID_OUTPUT',
   'AI_UNAVAILABLE',
+  'AI_REFUSED',
   'YOUTUBE_REAUTH_REQUIRED',
   'YOUTUBE_INSUFFICIENT_SCOPE',
   'YOUTUBE_QUOTA_EXCEEDED',
@@ -93,6 +94,14 @@ export const ERROR_DEFINITIONS: Record<ErrorCode, ErrorDefinition> = {
     messageKey: 'errors.ai.invalidOutput',
     retryable: true,
     logLevel: 'error',
+  },
+  // The model declined the request (policy refusal or content filter). The
+  // user can rephrase; retrying the identical request will not help.
+  AI_REFUSED: {
+    status: 422,
+    messageKey: 'errors.ai.refused',
+    retryable: false,
+    logLevel: 'warn',
   },
   AI_UNAVAILABLE: {
     status: 503,

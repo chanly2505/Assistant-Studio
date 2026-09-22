@@ -99,7 +99,9 @@
     "ai": {
       "limitReached": "You've used all your generations for this month. Your limit resets on {resetAt}.",
       "invalidOutput": "We couldn't generate that. Please try again.",
-      "unavailable": "AI features are temporarily unavailable."
+      "unavailable": "AI features are temporarily unavailable.",
+      "refused": "The AI couldn't help with that request. Try rephrasing it.",
+      "notConfigured": "AI features aren't set up on this server yet."
     },
     "youtube": {
       "reauthRequired": "Your YouTube connection expired. Reconnect your channel to keep syncing.",
@@ -199,5 +201,112 @@
     },
     "limitations": "YouTube's API doesn't provide impressions or click-through rate, so they aren't shown here. Revenue isn't requested.",
     "changeAbsolute": "{value} vs previous {days} days"
+  },
+  "studio": {
+    "title": "Studio",
+    "subtitle": "Get ideas, titles, descriptions, scripts and plans for your videos. Everything you generate is saved to your history.",
+    "tools": {
+      "ideas": "Video ideas",
+      "titles": "Titles",
+      "description": "Description",
+      "script": "Script",
+      "plan": "Content plan"
+    },
+    "fields": {
+      "topic": "What is the video about?",
+      "topicHint": "For example: \"the best breakfast stalls in Phnom Penh\"",
+      "count": "How many ideas",
+      "existingTitle": "Your current title (optional)",
+      "title": "Video title",
+      "summary": "What happens in the video?",
+      "includeChapters": "Add chapters with timestamps",
+      "outline": "Your outline or notes (optional)",
+      "targetMinutes": "Length (minutes)",
+      "goal": "What do you want to achieve?",
+      "goalHint": "For example: \"grow to 1,000 subscribers\" or \"bring more customers to my restaurant\"",
+      "weeks": "Number of weeks",
+      "channel": "Use a channel for context",
+      "noChannel": "No channel",
+      "language": "Write the result in"
+    },
+    "languageNote": "Results in Khmer, Thai, Vietnamese or Chinese may need more editing than English.",
+    "channelNote": "Using a channel gives the AI its niche, audience, typical video length and best recent titles. It never sends viewer data.",
+    "generate": "Generate",
+    "generating": "Generating… this can take up to a minute",
+    "remaining": "{remaining} of {limit} left this month · resets {date}",
+    "noneLeft": "No uses left this month for this tool. Resets {date}.",
+    "history": "Recent results",
+    "historyEmpty": "Nothing generated yet.",
+    "status": {
+      "OK": "Done",
+      "INVALID_OUTPUT": "Failed",
+      "PROVIDER_ERROR": "Failed",
+      "TIMEOUT": "Timed out",
+      "FILTERED": "Declined"
+    },
+    "errors": {
+      "AI_LIMIT_REACHED": "You've used this month's allowance for this tool.",
+      "AI_REFUSED": "The AI couldn't help with that request. Try rephrasing it.",
+      "AI_INVALID_OUTPUT": "The AI's answer didn't come out right. Please try again — this didn't use your allowance.",
+      "AI_UNAVAILABLE": "The AI service is busy or unavailable right now. Please try again shortly — this didn't use your allowance.",
+      "CONFIGURATION_MISSING": "AI features aren't set up on this server yet.",
+      "RATE_LIMITED": "Too many requests in a short time. Please wait a minute.",
+      "VALIDATION_FAILED": "Please check the form — something is missing or too long.",
+      "NOT_FOUND": "That channel isn't available.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "results": {
+    "back": "Back to Studio",
+    "cached": "You asked for this recently, so here is the same result again. It did not use your allowance.",
+    "failed": "This request didn't produce a result.",
+    "input": "You asked for",
+    "model": "Generated with {model}",
+    "ideas": {
+      "angle": "Angle",
+      "hook": "Opening hook",
+      "keywords": "Keywords",
+      "why": "Why it could work",
+      "save": "Save idea",
+      "saved": "Saved",
+      "saving": "Saving…"
+    },
+    "formats": {
+      "short": "Short",
+      "long": "Long-form",
+      "tutorial": "Tutorial",
+      "vlog": "Vlog",
+      "interview": "Interview",
+      "review": "Review"
+    },
+    "titles": {
+      "strength": "AI's estimate: {value} of 5",
+      "strengthNote": "The estimate is the AI's opinion, not a measurement of how the title will perform.",
+      "characters": "{count} characters"
+    },
+    "titleStyles": {
+      "curiosity": "Curiosity",
+      "howto": "How-to",
+      "listicle": "List",
+      "emotional": "Emotional",
+      "direct": "Direct"
+    },
+    "description": {
+      "copyHint": "Select the text to copy it into YouTube Studio.",
+      "hashtags": "Hashtags",
+      "chapters": "Chapters"
+    },
+    "script": {
+      "hook": "Hook",
+      "cta": "Call to action",
+      "duration": "About {minutes} min when spoken"
+    },
+    "plan": {
+      "cadence": "Suggested cadence",
+      "week": "Week",
+      "titleCol": "Video",
+      "format": "Format",
+      "goal": "Purpose"
+    }
   }
 }

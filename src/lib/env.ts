@@ -50,8 +50,18 @@ const base = z.object({
     .regex(/^\d{1,3}:[A-Za-z0-9+/=]+$/, 'expected "<version>:<base64 key>"')
     .optional(),
 
-  AI_PROVIDER: z.enum(['openai', 'mock']).default('mock'),
+  /**
+   * `openai` — the real provider. `disabled` — AI features answer "not
+   * configured". There is deliberately no fixture/mock provider here: a mock
+   * that returns plausible content would make the product look finished while
+   * doing nothing. Tests intercept the real HTTP calls instead.
+   */
+  AI_PROVIDER: z.enum(['openai', 'disabled']).default('openai'),
   OPENAI_API_KEY: z.string().min(1).optional(),
+  /** High-volume, short outputs: ideas, titles, descriptions. */
+  AI_MODEL_FAST: z.string().min(1).default('gpt-5.6-luna'),
+  /** Long-form reasoning: scripts and content plans. */
+  AI_MODEL_STRONG: z.string().min(1).default('gpt-5.6-sol'),
   AI_DAILY_SPEND_LIMIT_MICROS: z.coerce.number().int().positive().default(50_000_000),
 
   REDIS_URL: z.string().url().optional(),
@@ -100,22 +110,17 @@ const schema = base.superRefine((env, ctx) => {
     needed('TOKEN_ENCRYPTION_KEY', 'encrypts YouTube refresh tokens at rest');
     needed('REDIS_URL', 'rate limiting must be shared across instances');
 
-    if (env.AI_PROVIDER === 'mock') {
+    if (env.AI_PROVIDER === 'openai' && !env.OPENAI_API_KEY) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['AI_PROVIDER'],
-        message: 'AI_PROVIDER=mock is never allowed in production — it returns fixture data',
+        path: ['OPENAI_API_KEY'],
+        message: 'OPENAI_API_KEY is required in production when AI_PROVIDER=openai',
       });
     }
   }
 
-  if (env.AI_PROVIDER === 'openai' && !env.OPENAI_API_KEY) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['OPENAI_API_KEY'],
-      message: 'OPENAI_API_KEY is required when AI_PROVIDER=openai',
-    });
-  }
+  // Outside production a missing key is allowed: the AI features report
+  // CONFIGURATION_MISSING instead of the app refusing to start.
 });
 
 export type Env = z.infer<typeof base>;
