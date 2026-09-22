@@ -7,6 +7,12 @@
   --ok: #0f7b35;
   --bad: #b3261e;
   --radius: 10px;
+  /* Chart roles — validated with the dataviz palette checker against --surface. */
+  --link: #1f5fbf;
+  --series-1: #2a78d6;
+  --series-negative: #e34948;
+  --viz-grid: #ececf0;
+  --viz-axis: #6b6b75;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,6 +24,11 @@
     --border: #2a2b31;
     --ok: #4ade80;
     --bad: #f87171;
+    --link: #8ab4ff;
+    --series-1: #3987e5;
+    --series-negative: #e66767;
+    --viz-grid: #26272d;
+    --viz-axis: #9c9ca6;
   }
 }
 
@@ -31,6 +42,13 @@ html,
 body {
   margin: 0;
   padding: 0;
+}
+
+/* The browser's default link blue is ~2:1 on the dark background — below the
+   4.5:1 text minimum. Both modes get an explicit, checked colour. */
+a,
+a:visited {
+  color: var(--link);
 }
 
 body {
@@ -329,4 +347,222 @@ body {
 .video__stats {
   margin: 0.4rem 0 0;
   font-variant-numeric: tabular-nums;
+}
+
+/* ---- Phase 5: analytics ---- */
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.segmented__item {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.segmented__item.is-active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+}
+
+.kpi__label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.kpi__value {
+  margin: 0.2rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.kpi__delta {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+}
+
+.kpi__delta--up {
+  color: var(--ok);
+}
+
+.kpi__delta--down {
+  color: var(--bad);
+}
+
+.viz {
+  position: relative;
+}
+
+.viz svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.viz svg:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.viz__grid {
+  stroke: var(--viz-grid);
+  stroke-width: 1;
+}
+
+.viz__baseline {
+  stroke: var(--viz-axis);
+  stroke-width: 1;
+}
+
+.viz__axis {
+  fill: var(--viz-axis);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.viz__line {
+  fill: none;
+  stroke: var(--series-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.viz__area {
+  fill: var(--series-1);
+  opacity: 0.1;
+}
+
+.viz__dot {
+  fill: var(--series-1);
+}
+
+/* Provisional days: same hue, fainter — YouTube may still revise them. */
+.viz__run--provisional {
+  opacity: 0.45;
+}
+
+.viz__crosshair {
+  stroke: var(--viz-axis);
+  stroke-width: 1;
+}
+
+.viz__marker {
+  fill: var(--series-1);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.viz__bar--positive {
+  fill: var(--series-1);
+}
+
+.viz__bar--negative {
+  fill: var(--series-negative);
+}
+
+.viz__bar--provisional {
+  opacity: 0.45;
+}
+
+.viz__bar--active {
+  filter: brightness(1.12);
+}
+
+.viz__hit {
+  fill: transparent;
+  outline: none;
+}
+
+.viz__hit:focus-visible {
+  stroke: var(--text);
+  stroke-width: 1;
+}
+
+.viz__tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 0.1rem;
+  min-width: 8rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+  font-size: 0.8rem;
+  pointer-events: none;
+  text-align: center;
+}
+
+.viz__tooltip strong {
+  font-size: 0.95rem;
+}
+
+.viz__note {
+  color: var(--muted);
+}
+
+.viz__table {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.viz__table summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.viz__table table,
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.viz__table th,
+.viz__table td,
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table a {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

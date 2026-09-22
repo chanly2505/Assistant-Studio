@@ -2,9 +2,10 @@ import 'server-only';
 
 import type { Logger } from 'pino';
 
-import { notImplemented } from '@/domain/errors/app-error';
+import { CHANNEL_METRICS, VIDEO_METRICS, type Window } from '@/domain/youtube/analytics';
 import type { SecretString } from '@/domain/shared/secret';
 
+import { queryReport, toAnalyticsDays, type AnalyticsDay } from './youtube-analytics.client';
 import {
   listOwnedChannels,
   listPlaylistPage,
@@ -27,8 +28,7 @@ import {
  * all need the database, so they live in src/modules/sync/.
  *
  * Implemented: listOwnedChannels (Phase 3), listPlaylistPage + listVideos
- * (Phase 4). NOT_IMPLEMENTED until Phase 5: analytics — it throws rather than
- * returning invented data.
+ * (Phase 4), channel and per-video daily analytics (Phase 5).
  */
 
 export interface YouTubeChannelSummary {
@@ -46,17 +46,7 @@ export interface YouTubeChannelSummary {
   videoCount: number;
 }
 
-export interface AnalyticsRow {
-  date: string;
-  views: bigint;
-  estimatedMinutesWatched: bigint;
-  averageViewDuration: number;
-  subscribersGained: number;
-  subscribersLost: number;
-  likes: number;
-  comments: number;
-  shares: number;
-}
+export type { AnalyticsDay } from './youtube-analytics.client';
 
 export interface YouTubeService {
   /** channels.list(mine=true) — 1 quota unit. */
@@ -74,15 +64,24 @@ export interface YouTubeService {
   listVideos(accessToken: SecretString, videoIds: string[], log?: Logger): Promise<RawVideo[]>;
 
   /**
-   * youtubeAnalytics.reports.query. Callers pass a trailing window that overlaps
-   * already-fetched days, because YouTube revises recent data for ~3 days.
+   * Channel daily series (dimensions=day). Callers pass a window that overlaps
+   * days already stored, because YouTube revises the last ~3 days.
    */
-  getChannelAnalytics(
+  getChannelDailyAnalytics(
     accessToken: SecretString,
     youtubeChannelId: string,
-    from: Date,
-    to: Date,
-  ): Promise<AnalyticsRow[]>;
+    window: Window,
+    log?: Logger,
+  ): Promise<AnalyticsDay[]>;
+
+  /** One video's daily series (dimensions=day, filters=video==ID). */
+  getVideoDailyAnalytics(
+    accessToken: SecretString,
+    youtubeChannelId: string,
+    youtubeVideoId: string,
+    window: Window,
+    log?: Logger,
+  ): Promise<AnalyticsDay[]>;
 }
 
 export class GoogleYouTubeService implements YouTubeService {
@@ -103,8 +102,40 @@ export class GoogleYouTubeService implements YouTubeService {
     return listVideos(accessToken, videoIds, log);
   }
 
-  async getChannelAnalytics(): Promise<never> {
-    throw notImplemented('youtube.getChannelAnalytics');
+  async getChannelDailyAnalytics(
+    accessToken: SecretString,
+    youtubeChannelId: string,
+    window: Window,
+    log?: Logger,
+  ) {
+    const rows = await queryReport(
+      accessToken,
+      { youtubeChannelId, ...window, metrics: CHANNEL_METRICS, dimensions: ['day'], sort: 'day' },
+      log,
+    );
+    return toAnalyticsDays(rows);
+  }
+
+  async getVideoDailyAnalytics(
+    accessToken: SecretString,
+    youtubeChannelId: string,
+    youtubeVideoId: string,
+    window: Window,
+    log?: Logger,
+  ) {
+    const rows = await queryReport(
+      accessToken,
+      {
+        youtubeChannelId,
+        ...window,
+        metrics: VIDEO_METRICS,
+        dimensions: ['day'],
+        filters: `video==${youtubeVideoId}`,
+        sort: 'day',
+      },
+      log,
+    );
+    return toAnalyticsDays(rows);
   }
 }
 

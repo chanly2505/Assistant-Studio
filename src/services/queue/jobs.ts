@@ -22,6 +22,8 @@ export const JOB_SCHEMAS = {
   'channel.video-stats': z.object({ ...Ids, trigger: Trigger }).strict(),
   /** Channel-level counters (subscribers, views, video count). */
   'channel.stats': z.object({ ...Ids, trigger: Trigger }).strict(),
+  /** Daily analytics: channel series + per-video series for the HOT tier. */
+  'channel.analytics': z.object({ ...Ids, trigger: Trigger }).strict(),
   /** Hourly: find channels that are due and enqueue their jobs. */
   'schedule.tick': z.object({}).strict(),
 } as const;
@@ -44,6 +46,7 @@ export function jobIdFor<N extends JobName>(name: N, payload: JobPayload<N>): st
     }
     case 'channel.video-stats':
     case 'channel.stats':
+    case 'channel.analytics':
       return `${name}__${(payload as { channelId: string }).channelId}`;
     default:
       return name;

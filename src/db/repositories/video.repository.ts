@@ -150,6 +150,19 @@ export const videoRepository = {
     return rows.map((row) => row.id);
   },
 
+  /**
+   * Videos worth a daily analytics series: the HOT tier (recent, or a top
+   * performer), newest first. Capped by the caller.
+   */
+  async hotVideos(channelId: string, limit: number) {
+    return prisma.youTubeVideo.findMany({
+      where: { channelId, deletedFromYouTubeAt: null, syncTier: 'HOT' },
+      orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }],
+      take: limit,
+      select: { id: true, youtubeVideoId: true, publishedAt: true },
+    });
+  },
+
   async liveVideosForTiering(
     channelId: string,
   ): Promise<Array<Pick<YouTubeVideo, 'id' | 'publishedAt' | 'syncTier'>>> {

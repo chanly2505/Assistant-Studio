@@ -9,7 +9,7 @@ import type { SecretString } from '@/domain/shared/secret';
 import type { CallKind, QuotaOperation } from '@/domain/youtube/quota';
 import { logger as rootLogger } from '@/lib/logger';
 import { getAccessToken } from '@/modules/youtube/access-token';
-import { reserveYouTubeQuota } from '@/modules/youtube/quota-guard';
+import { reserveAnalyticsRequest, reserveYouTubeQuota } from '@/modules/youtube/quota-guard';
 
 export type SyncTrigger = 'connect' | 'manual' | 'schedule';
 
@@ -24,8 +24,13 @@ export interface SyncContext {
   kind: CallKind;
   log: Logger;
   now: Date;
-  /** Reserve quota for one call and count it against this job. */
+  /** Reserve Data API quota for one call and count it against this job. */
   spend(operation: QuotaOperation): Promise<void>;
+  /**
+   * Reserve one Analytics API request (a separate budget from the Data API).
+   * For ANALYTICS jobs, SyncJob.quotaUnitsUsed therefore counts requests.
+   */
+  spendAnalytics(): Promise<void>;
   addItems(count: number): void;
 }
 
@@ -109,6 +114,10 @@ export async function runSyncJob<T>(
       async spend(operation) {
         const { cost } = await reserveYouTubeQuota(operation, kind);
         quotaUnitsUsed += cost;
+      },
+      async spendAnalytics() {
+        await reserveAnalyticsRequest(kind);
+        quotaUnitsUsed += 1;
       },
       addItems(count) {
         itemsProcessed += count;

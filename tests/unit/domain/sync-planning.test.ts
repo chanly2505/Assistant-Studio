@@ -117,7 +117,7 @@ describe('planChannel', () => {
   it('plans nothing that ran recently', () => {
     const jobs = planChannel(
       channel({ lastStatsSyncAt: hoursAgo(2) }),
-      { VIDEO_DELTA: hoursAgo(2), VIDEO_STATS: hoursAgo(2) },
+      { VIDEO_DELTA: hoursAgo(2), VIDEO_STATS: hoursAgo(2), ANALYTICS: hoursAgo(2) },
       now,
     );
     expect(jobs).toEqual([]);

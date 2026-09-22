@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AppError } from '@/domain/errors/app-error';
-import { SecretString } from '@/domain/shared/secret';
 import { getAIService } from '@/services/ai';
-import { getYouTubeService } from '@/services/youtube/youtube.service';
 
 /**
  * Phase 2 wires the seams but not the integrations. These tests pin the honest
@@ -35,18 +33,5 @@ describe('AI service (Phase 2 placeholder)', () => {
   });
 });
 
-describe('YouTube service (not yet implemented parts)', () => {
-  const youtube = getYouTubeService();
-  const token = new SecretString('ya29.test', 'accessToken');
-
-  // Channels (Phase 3) and videos (Phase 4) are real and tested against
-  // intercepted Google responses in tests/integration/.
-  it.each([
-    [
-      'getChannelAnalytics',
-      () => youtube.getChannelAnalytics(token, 'UC1', new Date(), new Date()),
-    ],
-  ])('%s reports NOT_IMPLEMENTED', async (_name, call) => {
-    await expect(call()).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED', status: 501 });
-  });
-});
+// Every YouTube method is real as of Phase 5; each is tested against intercepted
+// Google responses in tests/integration/.

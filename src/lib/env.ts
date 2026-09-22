@@ -24,6 +24,12 @@ const base = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   YOUTUBE_OAUTH_REDIRECT_URI: z.string().url().optional(),
   YOUTUBE_DATA_DAILY_QUOTA: z.coerce.number().int().positive().default(10_000),
+  /**
+   * OUR ceiling on Analytics API requests per day. Google does not document a
+   * per-request cost for this API; keep this below the project's limit in
+   * Cloud Console → APIs & Services → Quotas.
+   */
+  YOUTUBE_ANALYTICS_DAILY_REQUEST_BUDGET: z.coerce.number().int().positive().default(2_000),
 
   /** 32 raw bytes, base64-encoded. Validated by length after decoding. */
   TOKEN_ENCRYPTION_KEY: z

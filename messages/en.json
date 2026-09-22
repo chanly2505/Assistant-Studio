@@ -81,7 +81,8 @@
       "FAILED": "Last sync failed — it will retry automatically",
       "PAUSED": "Sync paused until you reconnect"
     },
-    "lastSynced": "Videos last fully synced {date}"
+    "lastSynced": "Videos last fully synced {date}",
+    "viewAnalytics": "View analytics"
   },
   "errors": {
     "unauthenticated": "Please sign in again to continue.",
@@ -153,5 +154,50 @@
     },
     "statsAsOf": "Statistics as of {date}",
     "noStats": "Statistics not fetched yet"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "back": "All channels",
+    "periods": {
+      "7": "7 days",
+      "28": "28 days",
+      "90": "90 days",
+      "365": "365 days"
+    },
+    "periodLabel": "Period",
+    "range": "{from} – {to}",
+    "planLimited": "Your plan includes {days} days of analytics history.",
+    "dataThrough": "Final figures through {date}. The last few days may still change — YouTube takes 2–3 days to finish counting.",
+    "noFinalData": "YouTube is still processing these days. Figures may change.",
+    "empty": "No analytics yet. The first sync runs shortly after you connect a channel; YouTube data also arrives 2–3 days late, so a brand-new channel may take a few days to show anything.",
+    "kpi": {
+      "views": "Views",
+      "watchHours": "Watch time (hours)",
+      "avgDuration": "Average view duration",
+      "netSubscribers": "Net subscribers"
+    },
+    "change": "{sign}{percent} vs previous {days} days",
+    "noComparison": "Not enough earlier data to compare",
+    "gapsNote": "{known} of {total} days have data.",
+    "charts": {
+      "views": "Daily views",
+      "subscribers": "Subscribers gained minus lost, per day",
+      "subscribersWeekly": "Subscribers gained minus lost, per week",
+      "noData": "No data",
+      "provisional": "May still change",
+      "showTable": "Show as table",
+      "date": "Date",
+      "weekOf": "Week of"
+    },
+    "topVideos": {
+      "title": "Top videos in this period",
+      "note": "Daily figures are collected for recent uploads and your top videos, so older, quieter videos may not appear here.",
+      "video": "Video",
+      "views": "Views",
+      "watchHours": "Watch hours",
+      "empty": "No per-video figures for this period yet."
+    },
+    "limitations": "YouTube's API doesn't provide impressions or click-through rate, so they aren't shown here. Revenue isn't requested.",
+    "changeAbsolute": "{value} vs previous {days} days"
   }
 }

@@ -140,6 +140,12 @@ export default async function ChannelsPage({
                 >
                   {t('viewVideos')}
                 </Link>
+                <Link
+                  className="button"
+                  href={localePath(locale, `/channels/${channel.id}/analytics`)}
+                >
+                  {t('viewAnalytics')}
+                </Link>
                 {channel.needsReauth ? (
                   <ConnectForm label={t('reconnect')} />
                 ) : (

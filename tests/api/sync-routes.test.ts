@@ -138,6 +138,7 @@ describe('POST /api/v1/channels/:id/sync', () => {
 
     expect(response.status).toBe(202);
     expect(recordingQueue.jobs.map((job) => job.name).sort()).toEqual([
+      'channel.analytics',
       'channel.stats',
       'channel.video-stats',
       'channel.videos',
@@ -168,5 +169,61 @@ describe('POST /api/v1/channels/:id/sync', () => {
     });
     expect(response.status).toBe(404);
     expect(recordingQueue.jobs).toHaveLength(0);
+  });
+});
+
+describe('GET /api/v1/channels/:id/analytics', () => {
+  const analyticsRoute = async () =>
+    (await import('@/app/api/v1/channels/[channelId]/analytics/route')).GET;
+
+  it('returns the period, series and totals for the owner', async () => {
+    const { channel, cookie } = await signedInWithChannel();
+    for (let i = 0; i < 10; i += 1) {
+      await testPrisma.channelAnalyticsDaily.create({
+        data: {
+          channelId: channel.id,
+          date: new Date(Date.UTC(2026, 8, 1 + i)),
+          views: 100n,
+          estimatedMinutesWatched: 50n,
+          isProvisional: false,
+        },
+      });
+    }
+    await testPrisma.youTubeChannel.update({
+      where: { id: channel.id },
+      data: { lastAnalyticsDate: new Date(Date.UTC(2026, 8, 10)) },
+    });
+
+    const response = await (
+      await analyticsRoute()
+    )(get(`${APP}/api/v1/channels/${channel.id}/analytics?period=7`, cookie), {
+      params: Promise.resolve({ channelId: channel.id }),
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()).data;
+    expect(body.period).toMatchObject({ days: 7, from: '2026-09-04', to: '2026-09-10' });
+    expect(body.series).toHaveLength(7);
+    expect(body.totals.views).toBe(700);
+  });
+
+  it('rejects a period outside 7 / 28 / 90 / 365', async () => {
+    const { channel, cookie } = await signedInWithChannel();
+    const response = await (
+      await analyticsRoute()
+    )(get(`${APP}/api/v1/channels/${channel.id}/analytics?period=5000`, cookie), {
+      params: Promise.resolve({ channelId: channel.id }),
+    });
+    expect(response.status).toBe(422);
+  });
+
+  it('answers 404 for another user’s channel', async () => {
+    const { channel } = await signedInWithChannel();
+    const { cookie: strangerCookie } = await signedInWithChannel();
+    const response = await (
+      await analyticsRoute()
+    )(get(`${APP}/api/v1/channels/${channel.id}/analytics`, strangerCookie), {
+      params: Promise.resolve({ channelId: channel.id }),
+    });
+    expect(response.status).toBe(404);
   });
 });

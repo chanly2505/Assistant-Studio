@@ -23,6 +23,10 @@ export const SCHEDULE = {
   fullEveryDays: 7,
   deltaEveryHours: 20,
   statsEveryHours: 20,
+  analyticsEveryHours: 20,
+  /** After a connect, give the video backfill a head start so the first
+   *  analytics run can already build series for the new channel's videos. */
+  analyticsAfterConnectMs: 10 * 60 * 1000,
   /** Spread over most of the hour so every channel does not hit Google at :00. */
   maxJitterMs: 50 * 60 * 1000,
 } as const;
@@ -72,6 +76,9 @@ export function planChannel(
   if (olderThan(lastSucceeded.VIDEO_STATS, SCHEDULE.statsEveryHours)) {
     jobs.push({ name: 'channel.video-stats', payload: base });
   }
+  if (olderThan(lastSucceeded.ANALYTICS, SCHEDULE.analyticsEveryHours)) {
+    jobs.push({ name: 'channel.analytics', payload: base });
+  }
 
   return jobs;
 }
@@ -97,11 +104,26 @@ export async function scheduleDueSyncs(params: { now?: Date; log?: Logger } = {}
   const now = params.now ?? new Date();
   const log = params.log ?? rootLogger;
 
-  const unitsUsed = await quotaRepository.unitsUsed('YOUTUBE_DATA', quotaDayKey(now));
+  const day = quotaDayKey(now);
+  const unitsUsed = await quotaRepository.unitsUsed('YOUTUBE_DATA', day);
   const mode = quotaMode({ unitsUsed, dailyBudget: env.YOUTUBE_DATA_DAILY_QUOTA });
   if (mode !== 'normal') {
     log.warn({ unitsUsed, mode }, 'scheduled sync deferred: quota past the scheduled threshold');
     return { considered: 0, enqueued: 0, deferredForQuota: true };
+  }
+
+  // The Analytics API has its own budget; past 80% of it, only analytics defers.
+  const analyticsRequests = await quotaRepository.unitsUsed('YOUTUBE_ANALYTICS', day);
+  const analyticsDeferred =
+    quotaMode({
+      unitsUsed: analyticsRequests,
+      dailyBudget: env.YOUTUBE_ANALYTICS_DAILY_REQUEST_BUDGET,
+    }) !== 'normal';
+  if (analyticsDeferred) {
+    log.warn(
+      { analyticsRequests },
+      'scheduled analytics deferred: budget past the scheduled threshold',
+    );
   }
 
   const channels = await syncJobRepository.schedulableChannels();
@@ -111,6 +133,7 @@ export async function scheduleDueSyncs(params: { now?: Date; log?: Logger } = {}
   let enqueued = 0;
   for (const channel of channels) {
     for (const job of planChannel(channel, last.get(channel.id) ?? {}, now)) {
+      if (analyticsDeferred && job.name === 'channel.analytics') continue;
       await queue.enqueue(job.name, job.payload as never, { delayMs: jitterMs(channel.id) });
       enqueued += 1;
     }
@@ -154,6 +177,7 @@ export async function requestManualSync(input: {
   });
   await queue.enqueue('channel.stats', base);
   await queue.enqueue('channel.video-stats', base);
+  await queue.enqueue('channel.analytics', base);
 
   if (channel.syncStatus !== 'SYNCING') {
     await syncJobRepository.setChannelStatus(channel.id, 'QUEUED');
@@ -179,6 +203,11 @@ export async function enqueueInitialSync(
         mode: 'full',
         trigger: 'connect',
       });
+      await queue.enqueue(
+        'channel.analytics',
+        { userId, channelId, trigger: 'connect' },
+        { delayMs: SCHEDULE.analyticsAfterConnectMs },
+      );
       await syncJobRepository.setChannelStatus(channelId, 'QUEUED');
     }
   } catch (error) {

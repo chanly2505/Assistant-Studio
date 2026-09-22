@@ -515,6 +515,7 @@ describe('scheduling', () => {
 
     expect(tick).toMatchObject({ considered: 1, deferredForQuota: false });
     expect(recordingQueue.jobs.map((job) => job.name).sort()).toEqual([
+      'channel.analytics',
       'channel.stats',
       'channel.video-stats',
       'channel.videos',
@@ -554,7 +555,7 @@ describe('scheduling', () => {
     const { user, channel } = await connectedChannel();
 
     await requestManualSync({ userId: user.id, channelId: channel.id });
-    expect(recordingQueue.jobs).toHaveLength(3);
+    expect(recordingQueue.jobs).toHaveLength(4);
     expect(
       (await testPrisma.youTubeChannel.findUniqueOrThrow({ where: { id: channel.id } })).syncStatus,
     ).toBe('QUEUED');
@@ -670,6 +671,12 @@ describe('connect → first sync', () => {
       expect.objectContaining({
         name: 'channel.videos',
         payload: expect.objectContaining({ mode: 'full', trigger: 'connect' }),
+      }),
+      // Analytics waits so the video backfill can land first.
+      expect.objectContaining({
+        name: 'channel.analytics',
+        payload: expect.objectContaining({ trigger: 'connect' }),
+        delayMs: 10 * 60 * 1000,
       }),
     ]);
     const channel = await testPrisma.youTubeChannel.findFirstOrThrow({

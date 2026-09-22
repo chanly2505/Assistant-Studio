@@ -23,6 +23,7 @@ export const googleServer = setupServer();
 /** Every request the fake received, for assertions like "exactly one refresh". */
 export const received: Array<{
   url: string;
+  query: URLSearchParams;
   body: URLSearchParams | null;
   authorization: string | null;
 }> = [];
@@ -32,6 +33,7 @@ googleServer.events.on('request:start', async ({ request }) => {
   const text = request.method === 'POST' ? await clone.text() : '';
   received.push({
     url: request.url.split('?')[0] ?? request.url,
+    query: new URL(request.url).searchParams,
     body: text ? new URLSearchParams(text) : null,
     authorization: request.headers.get('authorization'),
   });
@@ -257,5 +259,82 @@ export function playlistNotFound() {
       { error: { code: 404, errors: [{ reason: 'playlistNotFound' }] } },
       { status: 404 },
     ),
+  );
+}
+
+/* ------------------------------ YouTube Analytics ------------------------------ */
+
+export const ANALYTICS_URL = 'https://youtubeanalytics.googleapis.com/v2/reports';
+
+export interface FakeDay {
+  day: string;
+  views?: number;
+  minutes?: number;
+  gained?: number;
+  lost?: number;
+}
+
+/**
+ * Answers reports.query like YouTube: a result table whose columns follow the
+ * requested dimensions + metrics, rows only for days that have data (days in
+ * `days` outside the requested window are dropped). `byVideo` supplies a
+ * video's series when the request filters video==ID.
+ */
+export function youtubeAnalytics(
+  channelDays: FakeDay[],
+  options: { byVideo?: Record<string, FakeDay[]>; reverseColumns?: boolean } = {},
+) {
+  return http.get(ANALYTICS_URL, ({ request }) => {
+    const query = new URL(request.url).searchParams;
+    const start = query.get('startDate') ?? '';
+    const end = query.get('endDate') ?? '';
+    const filter = query.get('filters') ?? '';
+    const videoId = filter.startsWith('video==') ? filter.slice('video=='.length) : null;
+    const source = videoId ? (options.byVideo?.[videoId] ?? []) : channelDays;
+
+    let columns = ['day', ...(query.get('metrics') ?? '').split(',')];
+    if (options.reverseColumns) columns = [...columns].reverse();
+
+    const valueOf = (d: FakeDay, column: string): string | number => {
+      switch (column) {
+        case 'day':
+          return d.day;
+        case 'views':
+          return d.views ?? 0;
+        case 'estimatedMinutesWatched':
+          return d.minutes ?? 0;
+        case 'averageViewDuration':
+          return d.views ? Math.round(((d.minutes ?? 0) * 60) / d.views) : 0;
+        case 'averageViewPercentage':
+          return 42.5;
+        case 'subscribersGained':
+          return d.gained ?? 0;
+        case 'subscribersLost':
+          return d.lost ?? 0;
+        default:
+          return 0;
+      }
+    };
+
+    const rows = source
+      .filter((d) => d.day >= start && d.day <= end)
+      .map((d) => columns.map((column) => valueOf(d, column)));
+
+    return HttpResponse.json({
+      kind: 'youtubeAnalytics#resultTable',
+      columnHeaders: columns.map((name) => ({
+        name,
+        columnType: name === 'day' ? 'DIMENSION' : 'METRIC',
+        dataType: name === 'day' ? 'STRING' : 'INTEGER',
+      })),
+      // YouTube omits `rows` entirely when there is no data.
+      ...(rows.length ? { rows } : {}),
+    });
+  });
+}
+
+export function analyticsError(status: number, reason: string) {
+  return http.get(ANALYTICS_URL, () =>
+    HttpResponse.json({ error: { code: status, errors: [{ reason }] } }, { status }),
   );
 }

@@ -5,6 +5,7 @@ import { AppError, toAppError } from '@/domain/errors/app-error';
 import { PERMANENT_ERROR_CODES } from '@/modules/sync/run-sync-job';
 import { refreshChannelStats, refreshVideoStats } from '@/modules/sync/refresh-stats';
 import { scheduleDueSyncs } from '@/modules/sync/schedule';
+import { syncAnalytics } from '@/modules/sync/sync-analytics';
 import { syncChannelVideos } from '@/modules/sync/sync-channel-videos';
 import { JOB_SCHEMAS, type JobName } from '@/services/queue/jobs';
 
@@ -48,6 +49,10 @@ export async function processJob(
       case 'channel.stats': {
         const payload = JOB_SCHEMAS['channel.stats'].parse(data);
         return (await refreshChannelStats({ ...payload, attempt, log })).result;
+      }
+      case 'channel.analytics': {
+        const payload = JOB_SCHEMAS['channel.analytics'].parse(data);
+        return (await syncAnalytics({ ...payload, attempt, log })).result;
       }
       case 'schedule.tick':
         return await scheduleDueSyncs({ log });
