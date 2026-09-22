@@ -5,10 +5,12 @@ import { redirect } from 'next/navigation';
 
 import { toAppError } from '@/domain/errors/app-error';
 import { requireUser } from '@/lib/auth/current-user';
+import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { flashCodeFor, localePath } from '@/lib/i18n/paths';
 import { disconnectChannel } from '@/modules/channels/disconnect-channel';
 import { listChannels } from '@/modules/channels/list-channels';
 import { requestManualSync } from '@/modules/sync/schedule';
+import { userTimeZone } from '@/modules/content/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,12 +35,13 @@ export default async function ChannelsPage({
   setRequestLocale(locale);
 
   const user = await requireUser(locale);
+  const zone = await userTimeZone(user.id);
   const t = await getTranslations('channels');
   const result = await listChannels({ userId: user.id });
   const channels = result.ok ? result.data.channels : [];
 
   const number = new Intl.NumberFormat(locale);
-  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
+  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: zone });
 
   async function disconnect(formData: FormData) {
     'use server';
@@ -66,7 +69,8 @@ export default async function ChannelsPage({
     redirect(localePath(locale, target));
   }
 
-  const flash = flashMessage(query, (key) => (t.has(key) ? t(key) : null));
+  const td = dynamicKeys(t);
+  const flash = flashMessage(query, (key) => (td.has(key) ? td(key) : null));
 
   return (
     <main className="page">
@@ -125,7 +129,7 @@ export default async function ChannelsPage({
                 )}
 
                 <p className="muted small">
-                  {t(`syncStatus.${channel.syncStatus}`)}
+                  {td(`syncStatus.${channel.syncStatus}`)}
                   {channel.lastSyncedAt &&
                     ` · ${t('lastSynced', { date: date.format(new Date(channel.lastSyncedAt)) })}`}
                 </p>

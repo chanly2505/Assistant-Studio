@@ -25,9 +25,23 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * Draft locales a reviewer can reach (docs/architecture/12 §G). A comma list
+ * such as `PREVIEW_LOCALES=km,th`. Inlined at build time — including into the
+ * edge middleware, which cannot load the server-only env module — so changing
+ * it needs a restart. Unknown or already-released codes are ignored.
+ */
+const previewLocales = process.env.PREVIEW_LOCALES ?? '';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+
+  // A separate output directory lets the e2e server run beside `pnpm dev`
+  // without the two overwriting each other's chunks.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+
+  env: { NEXT_PUBLIC_PREVIEW_LOCALES: previewLocales },
 
   // pino runs its transports in a worker thread that it locates by file path.
   // Bundling it breaks that path ("Cannot find module …/lib/worker.js") and the
@@ -35,7 +49,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
 
   // Fail the production build on type or lint errors. Never relax these.
-  typescript: { ignoreBuildErrors: false },
+  typescript: {
+    ignoreBuildErrors: false,
+    // The e2e server uses its own tsconfig so it never rewrites tsconfig.json.
+    tsconfigPath: process.env.NEXT_TSCONFIG_PATH || 'tsconfig.json',
+  },
   eslint: { ignoreDuringBuilds: false },
 
   images: {

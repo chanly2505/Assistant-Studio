@@ -29,7 +29,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="card">
         <Link
           className="button button--primary"
-          href={localePath(locale, user ? '/channels' : '/sign-in')}
+          href={localePath(locale, user ? '/dashboard' : '/sign-in')}
         >
           {user ? t('home.openChannels') : t('home.getStarted')}
         </Link>

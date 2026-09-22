@@ -11,6 +11,7 @@ import {
   TitlesOutput,
 } from '@/domain/ai/types';
 import { requireUser } from '@/lib/auth/current-user';
+import { dynamicKeys } from '@/lib/i18n/dynamic-key';
 import { localePath } from '@/lib/i18n/paths';
 import { isAssetFeature } from '@/domain/content/assets';
 import { getGeneration, saveIdea } from '@/modules/ai/history';
@@ -151,8 +152,8 @@ export default async function ResultPage({
       {generation.status !== 'OK' ? (
         <section className="card">
           <p>{t('failed')}</p>
-          {generation.errorCode && ts.has(`errors.${generation.errorCode}`) && (
-            <p className="muted">{ts(`errors.${generation.errorCode}`)}</p>
+          {generation.errorCode && dynamicKeys(ts).has(`errors.${generation.errorCode}`) && (
+            <p className="muted">{dynamicKeys(ts)(`errors.${generation.errorCode}`)}</p>
           )}
         </section>
       ) : (

@@ -9,8 +9,8 @@ import { SUPPORTED_LOCALES } from '@/domain/ai/types';
 import { ASSET_KINDS, ASSET_MAX_CHARS, charCount, type AssetKind } from '@/domain/content/assets';
 import { PROJECT_STATUSES, type ProjectStatus } from '@/domain/content/status';
 import { toLocalDateTimeInput } from '@/domain/content/time';
+import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
 import { requireUser } from '@/lib/auth/current-user';
-import { errorMessageKey } from '@/lib/i18n/error-key';
 import { LOCALE_LABELS } from '@/lib/i18n/routing';
 import { localePath } from '@/lib/i18n/paths';
 import { listChannels } from '@/modules/channels/list-channels';
@@ -58,13 +58,11 @@ export default async function ProjectPage({
 
   const t = await getTranslations('project');
   const tc = await getTranslations('content');
-  const tRoot = await getTranslations();
   const dateTime = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: zone,
   });
-  const errorKey = errorMessageKey(query.error);
   const self = localePath(locale, `/projects/${projectId}`);
   const status = project.status as ProjectStatus;
 
@@ -167,11 +165,7 @@ export default async function ProjectPage({
         </p>
       </header>
 
-      {errorKey && tRoot.has(errorKey) && (
-        <p className="flash flash--bad" role="alert">
-          {tRoot(errorKey as 'errors.notFound')}
-        </p>
-      )}
+      <ErrorFlash error={query.error} />
       {query.saved && <p className="flash flash--ok">{tc('saved')}</p>}
 
       <div className="split">

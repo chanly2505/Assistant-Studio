@@ -10,8 +10,8 @@ import {
   nextStatus,
   type ProjectStatus,
 } from '@/domain/content/status';
+import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
 import { requireUser } from '@/lib/auth/current-user';
-import { errorMessageKey } from '@/lib/i18n/error-key';
 import { localePath } from '@/lib/i18n/paths';
 import { CreateProjectRequest } from '@/modules/content/inputs';
 import { createProject, listProjects, updateProject } from '@/modules/content/projects';
@@ -34,7 +34,6 @@ export default async function ProjectsPage({
   const archived = query.archived === '1';
   const t = await getTranslations('projects');
   const ts = await getTranslations('content.statuses');
-  const tRoot = await getTranslations();
   const [result, zone] = await Promise.all([
     listProjects(user.id, { archived }),
     userTimeZone(user.id),
@@ -45,7 +44,6 @@ export default async function ProjectsPage({
     timeStyle: 'short',
     timeZone: zone,
   });
-  const errorKey = errorMessageKey(query.error);
 
   async function create(formData: FormData) {
     'use server';
@@ -130,11 +128,7 @@ export default async function ProjectsPage({
         <p className="muted">{t('subtitle')}</p>
       </header>
 
-      {errorKey && tRoot.has(errorKey) && (
-        <p className="flash flash--bad" role="alert">
-          {tRoot(errorKey as 'errors.notFound')}
-        </p>
-      )}
+      <ErrorFlash error={query.error} />
 
       {!archived && (
         <section className="card">

@@ -1,0 +1,642 @@
+{
+  "app": {
+    "name": "YouTube Studio Assistant",
+    "tagline": "规划、撰写并了解你的频道——不再靠猜。",
+    "draftNotice": "本译文为草稿，尚未经母语人士审校，部分措辞可能不准确。",
+    "language": "语言",
+    "draftLegend": "译文草稿，尚未审校。"
+  },
+  "nav": {
+    "dashboard": "首页",
+    "channels": "频道",
+    "studio": "工作室",
+    "projects": "项目",
+    "calendar": "日历",
+    "settings": "设置",
+    "signOut": "退出登录",
+    "signedInAs": "当前登录：{email}",
+    "ideas": "创意",
+    "main": "主菜单"
+  },
+  "home": {
+    "status": "系统状态",
+    "healthy": "所有系统运行正常",
+    "degraded": "部分系统不可用",
+    "checkDatabase": "数据库",
+    "getStarted": "登录以开始使用",
+    "openChannels": "前往你的频道"
+  },
+  "signIn": {
+    "title": "登录",
+    "subtitle": "使用你的 Google 账号。登录不会让我们访问你的 YouTube 频道——频道需要单独连接，并且只有在你选择时才会连接。",
+    "withGoogle": "使用 Google 继续",
+    "notConfigured": "此服务器尚未配置 Google 登录。请设置 GOOGLE_CLIENT_ID、GOOGLE_CLIENT_SECRET 和 AUTH_SECRET。",
+    "error": {
+      "AccessDenied": "登录已取消，或你的 Google 邮箱地址尚未验证。",
+      "Configuration": "服务器上的登录配置有误，请稍后再试。",
+      "OAuthAccountNotLinked": "此邮箱已关联其他登录方式。",
+      "Verification": "该登录链接已过期，请重试。",
+      "Default": "无法为你登录，请重试。"
+    }
+  },
+  "channels": {
+    "title": "你的频道",
+    "subtitle": "连接一个 YouTube 频道，我们就能读取它的视频和分析数据。我们只申请读取权限，从不向 YouTube 发布任何内容。",
+    "empty": "尚未连接频道。",
+    "connect": "连接 YouTube 频道",
+    "connectAnother": "再连接一个频道",
+    "reconnect": "重新连接",
+    "disconnect": "断开连接",
+    "subscribers": "{count} 位订阅者",
+    "subscribersHidden": "订阅人数已隐藏",
+    "videos": "{count} 个视频",
+    "views": "{count} 次观看",
+    "roundedNote": "YouTube 会将订阅人数四舍五入到三位有效数字。",
+    "statsAsOf": "截至 {date}",
+    "needsReauth": "访问权限已过期——重新连接以保持此频道的数据最新。",
+    "privacyNote": "断开连接会撤销我们在 Google 的访问权限，并保留我们已存储的数据，因此以后重新连接时会从上次中断处继续。",
+    "flash": {
+      "connected": "频道已连接。",
+      "disconnected": "频道已断开，我们在 Google 的访问权限已撤销。",
+      "disconnectedAlreadyInvalid": "频道已断开。我们的访问权限此前已在 Google 被移除。",
+      "disconnectRevokeFailed": "频道已在此处断开，但我们无法连接 Google 撤销访问权限。请在 myaccount.google.com/permissions 移除“YouTube Studio Assistant”。",
+      "OAUTH_DENIED": "你在 Google 页面上取消了操作，因此没有连接任何内容。",
+      "OAUTH_STATE_INVALID": "该连接链接已过期或已被使用，请重新开始。",
+      "OAUTH_FAILED": "Google 未完成连接，请重试。",
+      "YOUTUBE_INSUFFICIENT_SCOPE": "需要两项权限：读取你的频道和读取其分析数据。请重试，并保持两个复选框都勾选。",
+      "YOUTUBE_NO_CHANNEL": "该 Google 账号没有 YouTube 频道。如果你的频道属于品牌账号，请在 Google 的账号选择页面中选择它。",
+      "YOUTUBE_QUOTA_EXCEEDED": "今天的 YouTube 数据额度已用完，请明天再试。",
+      "CHANNEL_LIMIT": "你已达到套餐的频道数量上限。请断开一个频道或升级套餐后再添加。",
+      "CHANNEL_OWNED": "该频道已在此处连接到另一个账号。一个频道同一时间只能连接到一个账号。",
+      "CONFIGURATION_MISSING": "此服务器尚未配置频道连接功能。",
+      "RATE_LIMITED": "尝试次数过多，请等几分钟后再试。",
+      "UPSTREAM_UNAVAILABLE": "Google 暂时不可用，请稍后再试。",
+      "generic": "出了点问题，请重试。",
+      "syncQueued": "已加入刷新队列。新的视频和统计数据将在一两分钟内出现。",
+      "YOUTUBE_REAUTH_REQUIRED": "此频道的访问权限已过期。请重新连接以刷新。",
+      "NOT_FOUND": "该频道已不再连接。"
+    },
+    "viewVideos": "查看视频",
+    "refresh": "立即刷新",
+    "syncStatus": {
+      "NEVER_SYNCED": "尚未同步",
+      "QUEUED": "等待同步",
+      "SYNCING": "正在同步…",
+      "SYNCED": "已是最新",
+      "FAILED": "上次同步失败——将自动重试",
+      "PAUSED": "同步已暂停，重新连接后恢复"
+    },
+    "lastSynced": "视频最近一次完整同步于 {date}",
+    "viewAnalytics": "查看分析"
+  },
+  "errors": {
+    "unauthenticated": "请重新登录以继续。",
+    "forbidden": "你无权访问此内容。",
+    "notFound": "找不到该内容。",
+    "validationFailed": "你输入的部分信息无效。",
+    "conflict": "这与已存在的内容冲突。",
+    "rateLimited": "请求过多，请在 {retryAfter} 秒后重试。",
+    "internal": "我们这边出了问题。参考编号：{requestId}",
+    "notImplemented": "此功能尚未推出。",
+    "upstreamUnavailable": "我们依赖的某项服务暂时不可用。",
+    "serviceUnavailable": "服务暂时不可用，请稍后再试。",
+    "configurationMissing": "此服务器尚未配置此功能。",
+    "ai": {
+      "limitReached": "你本月的生成次数已用完。额度将于 {resetAt} 重置。",
+      "invalidOutput": "无法生成该内容，请重试。",
+      "unavailable": "AI 功能暂时不可用。",
+      "refused": "AI 无法处理该请求。请换一种说法试试。",
+      "notConfigured": "此服务器尚未设置 AI 功能。"
+    },
+    "youtube": {
+      "reauthRequired": "你的 YouTube 连接已过期。请重新连接频道以继续同步。",
+      "insufficientScope": "我们需要读取你 YouTube 分析数据的权限。请重新连接并授权访问。",
+      "quotaExceeded": "今日数据更新已暂停，稍后会自动恢复。",
+      "noChannel": "该 Google 账号没有 YouTube 频道。"
+    },
+    "oauth": {
+      "denied": "连接已取消。",
+      "stateInvalid": "该连接链接已过期或已被使用，请重新开始。",
+      "failed": "Google 未完成连接，请重试。"
+    },
+    "channels": {
+      "limitReached": "你已达到套餐上限：{limit} 个频道。",
+      "ownedByAnotherUser": "该频道已连接到另一个账号。"
+    },
+    "validation": {
+      "invalid_type": "此值的类型不正确。",
+      "invalid_string": "此值的格式不正确。",
+      "too_small": "此值太短。",
+      "too_big": "此值太长。",
+      "invalid_enum_value": "请从允许的选项中选择一项。",
+      "unrecognized_keys": "出现了意外的字段。",
+      "custom": "此值无效。",
+      "contentType": "需要 JSON 格式。",
+      "invalidJson": "请求内容不是有效的 JSON。"
+    },
+    "content": {
+      "needsScheduleDate": "请先设置日期和时间，再标记为已排期。",
+      "ideaPromoted": "这个创意已经成为项目，因此它会保留在该项目中。",
+      "tooManyProjects": "进行中的项目已达上限。请归档一些项目后再添加。",
+      "tooManyVersions": "版本数量已达上限。请新建项目，或继续编辑已选版本。",
+      "assetTooLong": "该文本超出了此类内容允许的长度。",
+      "generationFailed": "该 AI 结果未完成，没有可添加的内容。",
+      "notAnAsset": "此类 AI 结果无法添加到项目中。",
+      "compareSameKind": "只能比较同一类型的版本。",
+      "badTimeZone": "无法识别该时区。"
+    },
+    "settings": {
+      "languageUnavailable": "该语言暂不可用。"
+    }
+  },
+  "common": {
+    "retry": "重试",
+    "loading": "加载中…",
+    "dataThrough": "数据截至 {date}"
+  },
+  "videos": {
+    "title": "视频",
+    "back": "所有频道",
+    "empty": "暂无视频。",
+    "emptyPending": "暂无视频——首次同步正在排队或进行中。完成后此页面会逐步显示内容。",
+    "loadMore": "加载更多",
+    "published": "发布于 {date}",
+    "views": "{count} 次观看",
+    "likes": "{count} 个赞",
+    "likesHidden": "点赞数已隐藏",
+    "comments": "{count} 条评论",
+    "commentsOff": "评论已关闭",
+    "shortForm": "3 分钟及以内",
+    "shortFormHint": "仅按时长判断——YouTube 不会说明哪些视频是 Shorts。",
+    "privacy": {
+      "PUBLIC": "公开",
+      "UNLISTED": "不公开列出",
+      "PRIVATE": "私享"
+    },
+    "statsAsOf": "统计截至 {date}",
+    "noStats": "尚未获取统计数据"
+  },
+  "analytics": {
+    "title": "分析",
+    "back": "所有频道",
+    "periods": {
+      "7": "7 天",
+      "28": "28 天",
+      "90": "90 天",
+      "365": "365 天"
+    },
+    "periodLabel": "时间段",
+    "range": "{from} – {to}",
+    "planLimited": "你的套餐包含 {days} 天的分析历史记录。",
+    "dataThrough": "最终数据截至 {date}。最近几天的数据仍可能变化——YouTube 需要 2–3 天才能统计完成。",
+    "noFinalData": "YouTube 仍在处理这些天的数据，数字可能会变化。",
+    "empty": "暂无分析数据。首次同步会在你连接频道后不久运行；YouTube 数据还会延迟 2–3 天，所以新频道可能需要几天才会显示内容。",
+    "kpi": {
+      "views": "观看次数",
+      "watchHours": "观看时长（小时）",
+      "avgDuration": "平均观看时长",
+      "netSubscribers": "净增订阅者"
+    },
+    "change": "与前 {days} 天相比 {sign}{percent}",
+    "noComparison": "早期数据不足，无法比较",
+    "gapsNote": "{total} 天中有 {known} 天有数据。",
+    "charts": {
+      "views": "每日观看次数",
+      "subscribers": "每日新增订阅减去流失订阅",
+      "subscribersWeekly": "每周新增订阅减去流失订阅",
+      "noData": "无数据",
+      "provisional": "可能仍会变化",
+      "showTable": "以表格显示",
+      "date": "日期",
+      "weekOf": "所在周"
+    },
+    "topVideos": {
+      "title": "本时间段的热门视频",
+      "note": "每日数据只收集最近上传的视频和你的热门视频，因此较旧、观看较少的视频可能不会出现在这里。",
+      "video": "视频",
+      "views": "观看次数",
+      "watchHours": "观看小时数",
+      "empty": "此时间段暂无单个视频的数据。"
+    },
+    "limitations": "YouTube 的 API 不提供展示次数和点击率，因此这里不显示。我们也不请求收入数据。",
+    "changeAbsolute": "与前 {days} 天相比 {value}"
+  },
+  "studio": {
+    "title": "工作室",
+    "subtitle": "为你的视频获取创意、标题、简介、脚本和计划。你生成的所有内容都会保存在历史记录中。",
+    "tools": {
+      "ideas": "视频创意",
+      "titles": "标题",
+      "description": "简介",
+      "script": "脚本",
+      "plan": "内容计划"
+    },
+    "fields": {
+      "topic": "视频讲的是什么？",
+      "topicHint": "例如：“金边最好吃的早餐摊”",
+      "count": "创意数量",
+      "existingTitle": "你当前的标题（可选）",
+      "title": "视频标题",
+      "summary": "视频里发生了什么？",
+      "includeChapters": "添加带时间戳的章节",
+      "outline": "你的大纲或笔记（可选）",
+      "targetMinutes": "时长（分钟）",
+      "goal": "你想实现什么目标？",
+      "goalHint": "例如：“订阅者增长到 1,000 人”或“为我的餐厅带来更多顾客”",
+      "weeks": "周数",
+      "channel": "使用频道作为背景",
+      "noChannel": "不使用频道",
+      "language": "结果使用的语言"
+    },
+    "languageNote": "高棉语、泰语、越南语或中文的结果可能比英文需要更多修改。",
+    "channelNote": "使用频道会让 AI 了解频道的主题、受众、常见视频时长以及近期最佳标题。绝不会发送观众数据。",
+    "generate": "生成",
+    "generating": "正在生成…最多可能需要一分钟",
+    "remaining": "本月剩余 {remaining}/{limit} 次 · {date} 重置",
+    "noneLeft": "本月此工具的次数已用完。{date} 重置。",
+    "history": "最近的结果",
+    "historyEmpty": "尚未生成任何内容。",
+    "status": {
+      "OK": "完成",
+      "INVALID_OUTPUT": "失败",
+      "PROVIDER_ERROR": "失败",
+      "TIMEOUT": "超时",
+      "FILTERED": "已拒绝"
+    },
+    "errors": {
+      "AI_LIMIT_REACHED": "你本月此工具的额度已用完。",
+      "AI_REFUSED": "AI 无法处理该请求。请换一种说法试试。",
+      "AI_INVALID_OUTPUT": "AI 的回答不正确，请重试——本次不计入你的额度。",
+      "AI_UNAVAILABLE": "AI 服务繁忙或暂时不可用，请稍后再试——本次不计入你的额度。",
+      "CONFIGURATION_MISSING": "此服务器尚未设置 AI 功能。",
+      "RATE_LIMITED": "短时间内请求过多，请稍等一分钟。",
+      "VALIDATION_FAILED": "请检查表单——有内容缺失或过长。",
+      "NOT_FOUND": "该频道不可用。",
+      "generic": "出了点问题，请重试。"
+    },
+    "forProject": "正在处理“{title}”。在结果页面上，你可以把生成的内容添加到这个项目。",
+    "backToProject": "返回项目"
+  },
+  "results": {
+    "back": "返回工作室",
+    "cached": "你最近请求过相同内容，所以这里再次显示同一结果。本次不计入你的额度。",
+    "failed": "此请求没有产生结果。",
+    "input": "你的请求",
+    "model": "由 {model} 生成",
+    "ideas": {
+      "angle": "切入角度",
+      "hook": "开场钩子",
+      "keywords": "关键词",
+      "why": "为什么可能有效",
+      "save": "保存创意",
+      "saved": "已保存",
+      "saving": "正在保存…"
+    },
+    "formats": {
+      "short": "短视频",
+      "long": "长视频",
+      "tutorial": "教程",
+      "vlog": "Vlog",
+      "interview": "访谈",
+      "review": "测评"
+    },
+    "titles": {
+      "strength": "AI 评估：{value}/5",
+      "strengthNote": "此评估只是 AI 的看法，并不代表标题的实际表现。",
+      "characters": "{count} 个字符"
+    },
+    "titleStyles": {
+      "curiosity": "悬念",
+      "howto": "教程式",
+      "listicle": "清单",
+      "emotional": "情感",
+      "direct": "直接"
+    },
+    "description": {
+      "copyHint": "选中文本即可复制到 YouTube Studio。",
+      "hashtags": "话题标签",
+      "chapters": "章节"
+    },
+    "script": {
+      "hook": "开场",
+      "cta": "行动号召",
+      "duration": "朗读约 {minutes} 分钟"
+    },
+    "plan": {
+      "cadence": "建议的更新频率",
+      "week": "周",
+      "titleCol": "视频",
+      "format": "形式",
+      "goal": "目的"
+    },
+    "toProject": {
+      "heading": "添加到项目",
+      "choose": "项目",
+      "submit": "添加到项目",
+      "submitting": "正在添加…",
+      "pickTitle": "添加此标题",
+      "none": "请先创建一个项目来收集结果。",
+      "create": "前往项目",
+      "added": "已作为版本 {version} 添加到“{project}”。",
+      "alreadyAdded": "已在“{project}”中（版本 {version}）。",
+      "open": "打开项目",
+      "target": "你添加的内容都会进入“{project}”。"
+    }
+  },
+  "content": {
+    "statuses": {
+      "IDEA": "创意",
+      "SCRIPTING": "写脚本",
+      "FILMING": "拍摄",
+      "EDITING": "剪辑",
+      "SCHEDULED": "已排期",
+      "PUBLISHED": "已发布",
+      "ARCHIVED": "已归档"
+    },
+    "kinds": {
+      "TITLE": "标题",
+      "DESCRIPTION": "简介",
+      "SCRIPT": "脚本",
+      "TAGS": "标签",
+      "THUMBNAIL_BRIEF": "缩略图需求",
+      "CHAPTERS": "章节"
+    },
+    "sources": {
+      "AI": "AI",
+      "USER": "你"
+    },
+    "timeZone": {
+      "shownIn": "时间按 {zone} 显示。",
+      "use": "改用 {zone}"
+    },
+    "saved": "已保存。"
+  },
+  "ideas": {
+    "title": "创意",
+    "subtitle": "你从工作室保存或自己写下的创意。觉得值得做时，就开始一个项目。",
+    "tabs": {
+      "SAVED": "已保存",
+      "PROMOTED": "已成项目",
+      "ARCHIVED": "已归档"
+    },
+    "add": {
+      "heading": "添加创意",
+      "title": "创意",
+      "angle": "切入角度",
+      "hook": "开场钩子",
+      "keywords": "关键词",
+      "keywordsHint": "用逗号分隔。",
+      "submit": "保存创意",
+      "submitting": "正在保存…"
+    },
+    "empty": "这里还没有创意。",
+    "emptyHint": "在工作室生成一些，或在上方添加。",
+    "studioLink": "在工作室生成创意",
+    "fromAi": "来自 AI",
+    "yours": "你的",
+    "startProject": "开始项目",
+    "starting": "正在开始…",
+    "openProject": "打开项目",
+    "archive": "归档",
+    "restore": "恢复",
+    "delete": "删除"
+  },
+  "projects": {
+    "title": "项目",
+    "subtitle": "你正在制作的每个视频，按阶段显示。",
+    "new": {
+      "heading": "新项目",
+      "title": "暂定标题",
+      "submit": "创建项目",
+      "submitting": "正在创建…"
+    },
+    "empty": "还没有项目。在这里新建一个，或从创意开始。",
+    "column": {
+      "empty": "这里没有内容"
+    },
+    "scheduledFor": "排期 {date}",
+    "assets": "{count, plural, =0 {暂无版本} other {# 个版本}}",
+    "archivedLink": "已归档项目（{count}）",
+    "activeLink": "返回看板",
+    "archivedTitle": "已归档项目",
+    "moveTo": "移至",
+    "move": "移动",
+    "next": "移至{status}"
+  },
+  "project": {
+    "back": "所有项目",
+    "details": "详情",
+    "fields": {
+      "title": "暂定标题",
+      "notes": "备注",
+      "scheduledFor": "发布日期和时间",
+      "scheduledHint": "尚未确定可留空。",
+      "channel": "频道",
+      "noChannel": "无频道",
+      "language": "语言"
+    },
+    "save": "保存详情",
+    "saving": "正在保存…",
+    "status": {
+      "heading": "状态",
+      "current": "当前：{status}",
+      "moveTo": "移至",
+      "note": "备注（可选）",
+      "move": "移动",
+      "moving": "正在移动…",
+      "archive": "归档项目",
+      "restore": "恢复为{status}",
+      "published": "发布于 {date}"
+    },
+    "history": {
+      "heading": "历史记录",
+      "created": "创建时状态为{status}",
+      "moved": "{from} → {to}"
+    },
+    "assets": {
+      "heading": "标题、简介和脚本",
+      "intro": "每次修改都会保存为新版本。请选择你要使用的版本。",
+      "none": "暂无版本。",
+      "version": "版本 {version}",
+      "selected": "已选",
+      "select": "使用此版本",
+      "compare": "与已选版本比较",
+      "by": "来自{source}",
+      "characters": "{count}/{max} 个字符",
+      "add": "添加版本",
+      "kind": "类型",
+      "body": "文本",
+      "addSubmit": "保存版本",
+      "adding": "正在保存…",
+      "generate": "用 AI 生成",
+      "generateTitles": "标题",
+      "generateDescription": "简介",
+      "generateScript": "脚本"
+    },
+    "calendar": {
+      "heading": "日历安排",
+      "none": "此项目在日历上还没有安排。",
+      "add": "添加提醒"
+    },
+    "danger": {
+      "heading": "删除项目",
+      "body": "项目将从你的看板和日历中消失，其创意会回到你的创意列表。",
+      "submit": "删除项目"
+    }
+  },
+  "compare": {
+    "title": "比较版本",
+    "back": "返回项目",
+    "legend": "仅在版本 {before} 中的行标记为 −，仅在版本 {after} 中的行标记为 +。",
+    "identical": "这两个版本完全相同。"
+  },
+  "calendar": {
+    "title": "日历",
+    "subtitle": "已排期的视频和你自己的提醒。",
+    "previous": "上个月",
+    "next": "下个月",
+    "thisMonth": "本月",
+    "empty": "本月没有排期。",
+    "listHeading": "本月",
+    "project": "视频",
+    "entryTypes": {
+      "REMINDER": "提醒",
+      "TASK": "任务",
+      "NOTE": "备注"
+    },
+    "add": {
+      "heading": "添加到日历",
+      "title": "事项",
+      "type": "类型",
+      "date": "日期",
+      "time": "时间",
+      "timeHint": "全天事项可留空。",
+      "notes": "备注",
+      "project": "项目（可选）",
+      "noProject": "无",
+      "submit": "添加",
+      "submitting": "正在添加…"
+    },
+    "allDay": "全天",
+    "done": "标记为完成",
+    "undo": "标记为未完成",
+    "delete": "删除",
+    "statusDone": "已完成"
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "当前登录：{email}。",
+    "you": {
+      "heading": "你",
+      "language": "应用语言",
+      "languageHint": "菜单、按钮和消息使用的语言。",
+      "timezone": "时区",
+      "timezoneHint": "发布日期和日历使用此时区。"
+    },
+    "content": {
+      "heading": "你的内容",
+      "language": "新内容的语言",
+      "languageHint": "工作室和新项目默认使用此语言，每次仍可更改。",
+      "channel": "默认频道",
+      "channelHint": "除非你另选，否则工作室使用此频道。",
+      "noChannel": "无默认"
+    },
+    "save": "保存设置",
+    "saving": "正在保存…",
+    "channels": {
+      "heading": "关于你的频道",
+      "intro": "告诉 AI 工具每个频道的内容方向，让建议更贴合频道。",
+      "connect": "请先连接一个 YouTube 频道",
+      "edit": "描述“{channel}”"
+    },
+    "usageLink": "查看本月用量"
+  },
+  "channelSettings": {
+    "back": "设置",
+    "title": "关于“{channel}”",
+    "intro": "AI 工具会在为此频道提供的每条建议中使用这些回答。简短直白的回答效果最好，你也可以随时修改。",
+    "niche": "这个频道讲什么？",
+    "nicheHint": "例如：金边街头美食。",
+    "audience": "谁在看这个频道？",
+    "audienceHint": "例如：正在规划行程的游客，以及寻找新去处的本地人。",
+    "voice": "你和观众说话的风格是怎样的？",
+    "voiceHint": "例如：亲切幽默，从不强推。",
+    "keywords": "人们会搜索的词",
+    "keywordsHint": "用逗号分隔，最多 15 个。",
+    "privacy": "这些信息会连同你的请求一起发送给 AI，同时附上频道概况：你的更新频率、视频的常见时长，以及近期表现最好的视频标题及其相对于你平均水平的表现。不会发送频道的其他任何内容，也绝不会发送观众数据。",
+    "save": "保存",
+    "saving": "正在保存…"
+  },
+  "dashboard": {
+    "title": "首页",
+    "subtitle": "在一个地方规划、撰写并跟踪你的视频。",
+    "checklist": {
+      "heading": "入门",
+      "progress": "已完成 {completed}/{total} 步。",
+      "allDone": "一切就绪。下面的功能随时可用。",
+      "done": "已完成",
+      "todo": "未完成"
+    },
+    "steps": {
+      "connectChannel": {
+        "title": "连接你的 YouTube 频道",
+        "why": "我们读取你的视频和统计数据（绝不做任何修改），让建议更贴合你的频道。",
+        "action": "连接频道"
+      },
+      "describeChannel": {
+        "title": "说说你的频道讲什么",
+        "why": "两三个简短的回答就能让每条 AI 建议更有用。",
+        "action": "描述你的频道"
+      },
+      "firstIdeas": {
+        "title": "获取你的第一批视频创意",
+        "why": "输入一个主题，AI 会建议你可以保存的创意。",
+        "action": "获取创意"
+      },
+      "startProject": {
+        "title": "把一个创意变成项目",
+        "why": "项目把一个视频的标题、简介和脚本放在一起。",
+        "action": "打开你的创意"
+      },
+      "scheduleVideo": {
+        "title": "选择发布日期",
+        "why": "已排期的视频会显示在日历上，让你看到接下来的安排。",
+        "action": "打开你的项目"
+      }
+    },
+    "shortcuts": {
+      "heading": "前往",
+      "studio": "工作室：生成创意、标题、简介和脚本",
+      "projects": "项目：你正在做的所有内容",
+      "calendar": "日历：接下来的安排",
+      "usage": "用量：本月已使用的情况"
+    }
+  },
+  "usage": {
+    "title": "用量",
+    "subtitle": "已使用的和剩余的。",
+    "ai": {
+      "heading": "本月的 AI 工具",
+      "resets": "你的额度将于 {date} 重新开始。",
+      "tool": "工具",
+      "used": "已用",
+      "left": "剩余",
+      "bar": "已用比例",
+      "ofLimit": "{used}/{limit}",
+      "fairness": "只有在你拿到结果时才计一次。如果出错，不会计入。一天内再次提出完全相同的请求，会免费复用之前的结果。"
+    },
+    "unavailable": "暂时无法查看用量，请稍后再试。",
+    "plan": {
+      "heading": "你的套餐",
+      "channels": "已连接的频道",
+      "projects": "进行中的项目",
+      "ofLimit": "{used}/{limit}"
+    },
+    "youtube": {
+      "heading": "YouTube 数据",
+      "body": "你的视频和统计数据会自动更新。Google 限制每个应用每天可读取的数据量。如果达到上限，更新会暂停，并在太平洋时间午夜后继续。不会丢失任何数据。",
+      "delay": "YouTube 发布分析数据会延迟两到三天，因此最近几天总会标记为非最终数据。"
+    },
+    "settingsLink": "设置"
+  }
+}

@@ -7,8 +7,8 @@ import { SubmitButton } from '@/components/forms/submit-button';
 import { TimeZonePrompt } from '@/components/forms/time-zone-prompt';
 import type { ProjectStatus } from '@/domain/content/status';
 import { localDateKey, monthGrid, monthKey, parseMonth, shiftMonth } from '@/domain/content/time';
+import { ErrorFlash } from '@/app/[locale]/_components/error-flash';
 import { requireUser } from '@/lib/auth/current-user';
-import { errorMessageKey } from '@/lib/i18n/error-key';
 import { localePath } from '@/lib/i18n/paths';
 import {
   createCalendarEntry,
@@ -51,8 +51,6 @@ export default async function CalendarPage({
 
   const t = await getTranslations('calendar');
   const tc = await getTranslations('content');
-  const tRoot = await getTranslations();
-  const errorKey = errorMessageKey(query.error);
   const self = localePath(locale, `/calendar?month=${current}`);
 
   const monthTitle = new Intl.DateTimeFormat(locale, {
@@ -137,11 +135,7 @@ export default async function CalendarPage({
         />
       </header>
 
-      {errorKey && tRoot.has(errorKey) && (
-        <p className="flash flash--bad" role="alert">
-          {tRoot(errorKey as 'errors.notFound')}
-        </p>
-      )}
+      <ErrorFlash error={query.error} />
 
       <nav className="month-nav" aria-label={monthTitle}>
         <Link href={localePath(locale, `/calendar?month=${monthKey(prev.year, prev.month)}`)}>

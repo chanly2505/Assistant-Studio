@@ -1,8 +1,8 @@
-import { DEFAULT_LOCALE, isReleasedLocale } from './routing';
+import { DEFAULT_LOCALE, isAvailableLocale } from './routing';
 
-/** A locale-prefixed path, falling back to the default for unreleased locales. */
+/** A locale-prefixed path, falling back to the default for locales this deployment does not serve. */
 export function localePath(locale: string | null | undefined, path: string): string {
-  const safe = locale && isReleasedLocale(locale) ? locale : DEFAULT_LOCALE;
+  const safe = locale && isAvailableLocale(locale) ? locale : DEFAULT_LOCALE;
   return `/${safe}${path.startsWith('/') ? path : `/${path}`}`;
 }
 

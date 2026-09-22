@@ -1,10 +1,13 @@
 {
   "app": {
     "name": "YouTube Studio Assistant",
-    "tagline": "Plan, write and understand your channel — without the guesswork."
+    "tagline": "Plan, write and understand your channel — without the guesswork.",
+    "draftNotice": "This translation is a draft that a native speaker has not reviewed yet. Some wording may be wrong.",
+    "language": "Language",
+    "draftLegend": "Draft translation, not yet reviewed."
   },
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard": "Home",
     "channels": "Channels",
     "studio": "Studio",
     "projects": "Projects",
@@ -12,7 +15,8 @@
     "settings": "Settings",
     "signOut": "Sign out",
     "signedInAs": "Signed in as {email}",
-    "ideas": "Ideas"
+    "ideas": "Ideas",
+    "main": "Main"
   },
   "home": {
     "status": "System status",
@@ -140,6 +144,9 @@
       "notAnAsset": "This kind of AI result can't be added to a project.",
       "compareSameKind": "Only versions of the same kind can be compared.",
       "badTimeZone": "That time zone isn't recognised."
+    },
+    "settings": {
+      "languageUnavailable": "That language isn't available yet."
     }
   },
   "common": {
@@ -515,5 +522,121 @@
     "undo": "Mark not done",
     "delete": "Delete",
     "statusDone": "Done"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Signed in as {email}.",
+    "you": {
+      "heading": "You",
+      "language": "Language of the app",
+      "languageHint": "The language of menus, buttons and messages.",
+      "timezone": "Time zone",
+      "timezoneHint": "Publish dates and the calendar use this."
+    },
+    "content": {
+      "heading": "Your content",
+      "language": "Language for new content",
+      "languageHint": "Studio and new projects start in this language. You can still change it each time.",
+      "channel": "Default channel",
+      "channelHint": "Studio uses this channel unless you choose another.",
+      "noChannel": "No default"
+    },
+    "save": "Save settings",
+    "saving": "Saving…",
+    "channels": {
+      "heading": "About your channels",
+      "intro": "Tell the AI tools what each channel is about, so their suggestions fit it.",
+      "connect": "Connect a YouTube channel first",
+      "edit": "Describe “{channel}”"
+    },
+    "usageLink": "See what you have used this month"
+  },
+  "channelSettings": {
+    "back": "Settings",
+    "title": "About “{channel}”",
+    "intro": "The AI tools use these answers for every suggestion for this channel. Short, plain answers work best, and you can change them any time.",
+    "niche": "What is the channel about?",
+    "nicheHint": "For example: street food in Phnom Penh.",
+    "audience": "Who watches it?",
+    "audienceHint": "For example: visitors planning a trip, and locals looking for new places.",
+    "voice": "How do you talk to viewers?",
+    "voiceHint": "For example: warm and funny, never pushy.",
+    "keywords": "Words people search for",
+    "keywordsHint": "Separate with commas. Up to 15.",
+    "privacy": "This is sent to the AI with your requests, together with a summary of your channel: how often you post, how long your videos usually are, and the titles of your best recent videos with how they did compared with your average. Nothing else from your channel is sent, and never your viewers’ data.",
+    "save": "Save",
+    "saving": "Saving…"
+  },
+  "dashboard": {
+    "title": "Home",
+    "subtitle": "Plan, write and keep track of your videos in one place.",
+    "checklist": {
+      "heading": "Getting started",
+      "progress": "{completed} of {total} steps done.",
+      "allDone": "You're all set. Everything below is ready when you need it.",
+      "done": "done",
+      "todo": "not done yet"
+    },
+    "steps": {
+      "connectChannel": {
+        "title": "Connect your YouTube channel",
+        "why": "We read your videos and statistics (never change anything) so advice fits your channel.",
+        "action": "Connect a channel"
+      },
+      "describeChannel": {
+        "title": "Say what your channel is about",
+        "why": "Two or three short answers make every AI suggestion more useful.",
+        "action": "Describe your channel"
+      },
+      "firstIdeas": {
+        "title": "Get your first video ideas",
+        "why": "Type a topic and the AI suggests ideas you can save.",
+        "action": "Get ideas"
+      },
+      "startProject": {
+        "title": "Turn an idea into a project",
+        "why": "A project keeps the title, description and script for one video together.",
+        "action": "Open your ideas"
+      },
+      "scheduleVideo": {
+        "title": "Pick a publish date",
+        "why": "Scheduled videos appear on your calendar, so you can see what is coming.",
+        "action": "Open your projects"
+      }
+    },
+    "shortcuts": {
+      "heading": "Go to",
+      "studio": "Studio: generate ideas, titles, descriptions and scripts",
+      "projects": "Projects: everything you are working on",
+      "calendar": "Calendar: what is coming up",
+      "usage": "Usage: what you have used this month"
+    }
+  },
+  "usage": {
+    "title": "Usage",
+    "subtitle": "What you have used, and what is left.",
+    "ai": {
+      "heading": "AI tools this month",
+      "resets": "Your allowance starts again on {date}.",
+      "tool": "Tool",
+      "used": "Used",
+      "left": "Left",
+      "bar": "Share used",
+      "ofLimit": "{used} of {limit}",
+      "fairness": "A use only counts when you get a result. If something fails, it is not counted. Asking the exact same thing again within a day reuses the earlier result for free."
+    },
+    "unavailable": "Usage isn't available right now. Please try again later.",
+    "plan": {
+      "heading": "Your plan",
+      "channels": "Connected channels",
+      "projects": "Active projects",
+      "ofLimit": "{used} of {limit}"
+    },
+    "youtube": {
+      "heading": "YouTube data",
+      "body": "Your videos and statistics update automatically. Google limits how much data every app can read each day. If that limit is reached, updates pause and continue after midnight Pacific time. Nothing is lost.",
+      "delay": "YouTube publishes analytics two to three days late, so the most recent days are always marked as not final."
+    },
+    "settingsLink": "Settings"
   }
 }

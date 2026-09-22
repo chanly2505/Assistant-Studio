@@ -1,14 +1,14 @@
 import { getRequestConfig } from 'next-intl/server';
 
-import { DEFAULT_LOCALE, isReleasedLocale } from './routing';
+import { DEFAULT_LOCALE, isAvailableLocale } from './routing';
 
 /**
  * Loads the message catalogue for the request's locale, falling back to English
- * for anything not yet released.
+ * for any locale this deployment does not serve.
  */
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
-  const locale = requested && isReleasedLocale(requested) ? requested : DEFAULT_LOCALE;
+  const locale = requested && isAvailableLocale(requested) ? requested : DEFAULT_LOCALE;
 
   return {
     locale,

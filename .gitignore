@@ -45,3 +45,6 @@ prisma/*.db-journal
 # per-user Claude Code settings
 .claude/settings.local.json
 .redisdata/
+
+# Playwright sign-in state (a live session cookie)
+tests/e2e/.auth/

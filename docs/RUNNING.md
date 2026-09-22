@@ -162,6 +162,21 @@ someone:
 
 ---
 
+### Settings, languages and Home
+
+- **Home** shows a "Getting started" checklist, worked out from what you have actually done.
+- **Settings** is where you choose:
+  - the app's language and your time zone
+  - the language new content starts in
+  - your default channel for Studio
+- Under **Settings → About your channels**, describe each channel (topic, audience, voice, search
+  words). The AI uses these answers for every suggestion.
+- **Usage** shows what you have used this month.
+- **Other languages:** Khmer, Thai, Vietnamese and Chinese exist as **unreviewed drafts** and are
+  hidden. To look at them, start the app with `PREVIEW_LOCALES=km,th,vi,zh pnpm dev` and use the
+  language links at the bottom of any page. See [`messages/README.md`](../messages/README.md) for
+  how to review and release a language.
+
 ## 6. Checking the code (optional)
 
 The database and Redis must be running (`pnpm db:start && pnpm redis:start`).
@@ -171,7 +186,8 @@ The database and Redis must be running (`pnpm db:start && pnpm redis:start`).
 | `pnpm verify` | typecheck + lint + all tests, the full check |
 | `pnpm test` | tests only (they use a separate `_test` database, so your data is safe) |
 | `pnpm db:studio` | browse the database in your browser |
-| `pnpm build` | production build check |
+| `pnpm build` | production build check (stop `pnpm dev` first: they share the `.next` folder) |
+| `pnpm test:e2e` | browser tests in your installed Chrome. Uses its own port (3100), build folder and database, so `pnpm dev` can keep running |
 
 ---
 

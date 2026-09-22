@@ -18,6 +18,11 @@ const config = [
       '.pgdata/**',
       'next-env.d.ts',
       'src/generated/**',
+      // Agent worktrees are separate checkouts, linted in their own sessions.
+      '.claude/**',
+      // Playwright's output folders.
+      'playwright-report/**',
+      'test-results/**',
     ],
   },
 
@@ -90,7 +95,9 @@ const config = [
    * ------------------------------------------------------------------ */
   {
     files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
-    ignores: ['src/lib/env.ts'],
+    // preview-locales.ts reads one PUBLIC, build-time flag that the edge
+    // middleware also needs; it carries no secret and is documented there.
+    ignores: ['src/lib/env.ts', 'src/lib/i18n/preview-locales.ts'],
     rules: {
       'no-restricted-properties': [
         'error',
